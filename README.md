@@ -1,2 +1,2 @@
 # slicKnx
-Simplified KNX API, based on calimero
+Simplified KNX API, based on Calimero 2.2.1-SNAPSHOT
