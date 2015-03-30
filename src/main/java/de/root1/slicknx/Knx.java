@@ -237,7 +237,7 @@ public class Knx {
             if (listenerslist != null) {
                 listenerslist.remove(listener);
                 if (listenerslist.isEmpty()) {
-                    listeners.remove(groupAddress, listenerslist);
+                    listeners.remove(groupAddress);
                 }
             }
         }
