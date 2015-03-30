@@ -1,5 +1,5 @@
 # slicKnx
-Simplified KNX API, based on Calimero 2.2.1-SNAPSHOT
+Simplified KNX API, based on Calimero 2.2.1-beta
 
 Sample:
 
@@ -28,6 +28,8 @@ knx.writeBoolean("1/1/15", true);
 ```
 
 --------------------------------
+
+Maven POM configuration:
 
 ```xml
 <dependencies>
