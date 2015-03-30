@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tuwien.auto.calimero.GroupAddress;
@@ -246,8 +247,31 @@ public class Knx {
 
     }
 
-    public static void main(String[] args) throws UnknownHostException {
+    public static void main(String[] args) throws UnknownHostException, KnxException {
+        
         Knx knx = new Knx("1.1.254");
+        
+        knx.addGroupAddressListener("1/1/15", new GroupAddressListener() {
+
+            @Override
+            public void readRequest(GroupAddressEvent event) {
+            }
+
+            @Override
+            public void readResponse(GroupAddressEvent event) {
+            }
+
+            @Override
+            public void write(GroupAddressEvent event) {
+                try {
+                    System.out.println("Received update for 1/1/15: "+event.asBool());
+                } catch (KnxFormatException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+        
+        knx.writeBoolean("1/1/15", true);
 
 
     }
