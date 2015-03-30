@@ -28,8 +28,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tuwien.auto.calimero.DetachEvent;
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.IndividualAddress;
+import tuwien.auto.calimero.datapoint.StateDP;
 import tuwien.auto.calimero.exception.KNXException;
 import tuwien.auto.calimero.exception.KNXFormatException;
 import tuwien.auto.calimero.exception.KNXTimeoutException;
@@ -38,6 +40,8 @@ import tuwien.auto.calimero.link.KNXNetworkLinkIP;
 import tuwien.auto.calimero.link.medium.TPSettings;
 import tuwien.auto.calimero.process.ProcessCommunicationBase;
 import tuwien.auto.calimero.process.ProcessCommunicatorImpl;
+import tuwien.auto.calimero.process.ProcessEvent;
+import tuwien.auto.calimero.process.ProcessListener;
 
 /**
  *
@@ -51,9 +55,10 @@ public class Knx {
     private int port = 3671;
     private InetAddress hostadr;
 
+    private GroupAddressListener globalGroupAddressListener;
     private final Map<String, List<GroupAddressListener>> listeners = new HashMap<>();
 
-    private final GeneralGroupAddressListener ggal = new GeneralGroupAddressListener(listeners);
+    private final GeneralGroupAddressListener ggal = new GeneralGroupAddressListener(globalGroupAddressListener, listeners);
 
     /**
      * Used to write data to KNX and listen to GAs
@@ -86,10 +91,12 @@ public class Knx {
     }
 
     /**
+     * DPT 16.001
      * 14 byte ISO8859-1 String
+     *
      * @param ga
-     * @param string 
-     * @throws de.root1.slicknx.KnxException 
+     * @param string
+     * @throws de.root1.slicknx.KnxException
      */
     public void writeString(String ga, String string) throws KnxException {
         checkGa(ga);
@@ -101,10 +108,11 @@ public class Knx {
     }
 
     /**
-     * DPT ?
+     * DPT 1
+     *
      * @param ga
-     * @param bool 
-     * @throws de.root1.slicknx.KnxException 
+     * @param bool
+     * @throws de.root1.slicknx.KnxException
      */
     public void writeBoolean(String ga, boolean bool) throws KnxException {
         checkGa(ga);
@@ -117,9 +125,10 @@ public class Knx {
 
     /**
      * DPT 9
+     *
      * @param ga
-     * @param f 
-     * @throws de.root1.slicknx.KnxException 
+     * @param f float value [-671088,64-670760,96]
+     * @throws de.root1.slicknx.KnxException
      */
     public void write2ByteFloat(String ga, float f) throws KnxException {
         checkGa(ga);
@@ -132,6 +141,7 @@ public class Knx {
 
     /**
      * DPT 14
+     *
      * @param ga
      * @param f 4 byte float value
      * @throws de.root1.slicknx.KnxException
@@ -146,9 +156,12 @@ public class Knx {
     }
 
     /**
-     * Step
+     * DPT 3
+     * Dimming (POsition, Control, Value)
+     *
      * @param ga
-     * @param control start=true, stop=false, increase=true, decrease=false, down=true, up=false
+     * @param control start=true, stop=false, increase=true, decrease=false,
+     * down=true, up=false
      * @param stepcode value [0..7]
      * @throws de.root1.slicknx.KnxException
      */
@@ -163,6 +176,7 @@ public class Knx {
 
     /**
      * DPT 5.001
+     *
      * @param ga
      * @param scale value [0..100], i.e. %
      * @throws de.root1.slicknx.KnxException
@@ -174,10 +188,11 @@ public class Knx {
         } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException ex) {
             throw new KnxException("Error writing scale", ex);
         }
-    }   
-    
+    }
+
     /**
      * DPT 5.003
+     *
      * @param ga
      * @param angle value [0..360], i.e. °C
      * @throws de.root1.slicknx.KnxException
@@ -189,12 +204,11 @@ public class Knx {
         } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException ex) {
             throw new KnxException("Error writing angle", ex);
         }
-    }  
-    
+    }
+
     /**
-     * DPT 5.010
-     * DPT 5.005
-     * 
+     * DPT 5.010 DPT 5.005
+     *
      * @param ga
      * @param count value [0..255], i.e. absolute 8-bit dimm value
      * @throws de.root1.slicknx.KnxException
@@ -206,12 +220,53 @@ public class Knx {
         } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException ex) {
             throw new KnxException("Error writing count", ex);
         }
+    }
+
+    /**
+     * DPT 7 16-bit unsigned value
+     *
+     * @param ga
+     * @param value value [0..65535] ^= 16bit unsigned
+     * @throws de.root1.slicknx.KnxException
+     */
+    public void writeDpt7(String ga, int value) throws KnxException {
+        checkGa(ga);
+        try {
+
+            StateDP dp = new StateDP(new GroupAddress(ga), "7.001", 7, "7.001");
+
+            pc.write(dp, Integer.toString(value));
+
+        } catch (KNXException ex) {
+            throw new KnxException("Error writing dpt7", ex);
+        }
+    }
+    
+    /**
+     * DPT 7 16-bit unsigned value
+     *
+     * @param ga
+     * @param value value [-32768-32767] ^= 16bit signed
+     * @throws de.root1.slicknx.KnxException
+     */
+    public void writeDpt8(String ga, int value) throws KnxException {
+        checkGa(ga);
+        try {
+
+            StateDP dp = new StateDP(new GroupAddress(ga), "8.001", 7, "8.001");
+
+            pc.write(dp, Integer.toString(value));
+
+        } catch (KNXException ex) {
+            throw new KnxException("Error writing dpt8", ex);
+        }
     }    
 
     /**
      * Add a listener for the specified group address.
+     *
      * @param groupAddress group address, format "x/y/z"
-     * @param listener 
+     * @param listener
      */
     public void addGroupAddressListener(String groupAddress, GroupAddressListener listener) {
         checkGa(groupAddress);
@@ -223,12 +278,20 @@ public class Knx {
             listenerslist.add(listener);
         }
     }
+    
+    /**
+     * Global listener for all group addresses
+     * @param listener 
+     */
+    public void setGlobalGroupAddressListener(GroupAddressListener listener) {
+        this.globalGroupAddressListener = listener;
+    }
 
     /**
      * Remove a listener from listening to specified group address
-     * 
+     *
      * @param groupAddress group address, format "x/y/z"
-     * @param listener 
+     * @param listener
      */
     public void removeGroupAddressListener(String groupAddress, GroupAddressListener listener) {
         checkGa(groupAddress);
@@ -248,9 +311,9 @@ public class Knx {
     }
 
     public static void main(String[] args) throws UnknownHostException, KnxException {
-        
+
         Knx knx = new Knx("1.1.254");
-        
+
         knx.addGroupAddressListener("1/1/15", new GroupAddressListener() {
 
             @Override
@@ -264,15 +327,14 @@ public class Knx {
             @Override
             public void write(GroupAddressEvent event) {
                 try {
-                    System.out.println("Received update for 1/1/15: "+event.asBool());
+                    System.out.println("Received update for 1/1/15: " + event.asBool());
                 } catch (KnxFormatException ex) {
                     ex.printStackTrace();
                 }
             }
         });
-        
-        knx.writeBoolean("1/1/15", true);
 
+        knx.writeBoolean("1/1/15", true);
 
     }
 

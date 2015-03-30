@@ -31,9 +31,12 @@ import tuwien.auto.calimero.process.ProcessListenerEx;
 public class GeneralGroupAddressListener extends ProcessListenerEx {
     
     private final Map<String, List<GroupAddressListener>> listeners;
+    private final GroupAddressListener globalGroupAddressListener;
 
-    GeneralGroupAddressListener(Map<String, List<GroupAddressListener>> listeners) {
+
+    GeneralGroupAddressListener(GroupAddressListener globalGroupAddressListener, Map<String, List<GroupAddressListener>> listeners) {
         this.listeners = listeners;
+        this.globalGroupAddressListener = globalGroupAddressListener;
     }
     
     private void convertAndForward(ProcessEvent e){
@@ -52,7 +55,22 @@ public class GeneralGroupAddressListener extends ProcessListenerEx {
                 type = GroupAddressEvent.Type.GROUP_WRITE;
                 break;
         }
+        
         GroupAddressEvent gae = new GroupAddressEvent(e.getSourceAddr().toString(), destination, GroupAddressEvent.Type.GROUP_READ, e.getASDU());
+        
+        if (globalGroupAddressListener!=null) {
+            switch(gae.getType()) {
+                    case GROUP_READ:
+                        globalGroupAddressListener.readRequest(gae);
+                        break;
+                    case GROUP_RESPONSE:
+                        globalGroupAddressListener.readResponse(gae);
+                        break;
+                    case GROUP_WRITE:
+                        globalGroupAddressListener.write(gae);
+                        break;
+                }
+        }
         
         // forward
         synchronized(listeners) {
