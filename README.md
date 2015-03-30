@@ -3,8 +3,7 @@ Simplified KNX API, based on Calimero 2.2.1-SNAPSHOT
 
 Sample:
 
-
-
+```java
 Knx knx = new Knx("1.1.254");      
 knx.addGroupAddressListener("1/1/15", new GroupAddressListener() {
 
@@ -26,9 +25,11 @@ knx.addGroupAddressListener("1/1/15", new GroupAddressListener() {
     }
 });
 knx.writeBoolean("1/1/15", true);
+```
 
 --------------------------------
 
+```xml
 <dependencies>
     ...
     <dependency>
@@ -59,4 +60,4 @@ knx.writeBoolean("1/1/15", true);
         <snapshots>
     </repository>
 </repositories>
-
+```
