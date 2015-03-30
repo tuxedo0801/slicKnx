@@ -33,4 +33,50 @@
             <version>2.2.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
+    
+    <issueManagement>
+        <system>Github</system>
+        <url>https://hithub.com/tuxedo0801/slicKnx/issues</url>
+    </issueManagement>
+
+    <developers>
+        <developer>
+            <id>achristian</id>
+            <name>Alexander Christian</name>
+            <email>info_NOSPAM_@root1.de</email>
+            <roles>
+                <role>Project Manager</role>
+                <role>Architect</role>
+            </roles>
+            <organization>root1.de</organization>
+            <timezone>+1</timezone>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>GNU GENERAL PUBLIC LICENSE, Version 3.0</name>
+            <url>license.txt</url>
+        </license>
+    </licenses>
+
+    <scm>
+        <connection>scm:git:https://github.com/tuxedo0801/slicKnx.git</connection>
+        <url>https://github.com/tuxedo0801/slicKnx</url>
+    </scm>    
+    
+    
+    <!-- upload informations for deploying the jar -->
+    <distributionManagement>
+        <repository>
+            <id>root1-releases</id>
+            <name>internal releases</name>
+            <url>http://nexus.root1.de/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>root1-snapshots</id>
+            <name>internal snapshots</name>
+            <url>http://nexus.root1.de/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>    
 </project>
