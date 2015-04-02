@@ -42,7 +42,7 @@ public class GroupAddressEvent {
     private final byte[] data;
 
     public enum Type {
-        GROUP_READ, GROUP_RESPONSE, GROUP_WRITE
+        UNDEFINED, GROUP_READ, GROUP_RESPONSE, GROUP_WRITE
     };
     
     private final Type type;
@@ -233,6 +233,11 @@ public class GroupAddressEvent {
         }
     }
 
+    @Override
+    public String toString() {
+        return "GroupAddressEvent{" + "source=" + source + ", destination=" + destination + ", data=" + Arrays.toString(data) + ", type=" + type + '}';
+    }
+    
     @Override
     public int hashCode() {
         int hash = 3;

@@ -40,8 +40,6 @@ import tuwien.auto.calimero.link.KNXNetworkLinkIP;
 import tuwien.auto.calimero.link.medium.TPSettings;
 import tuwien.auto.calimero.process.ProcessCommunicationBase;
 import tuwien.auto.calimero.process.ProcessCommunicatorImpl;
-import tuwien.auto.calimero.process.ProcessEvent;
-import tuwien.auto.calimero.process.ProcessListener;
 
 /**
  *
@@ -64,19 +62,25 @@ public class Knx {
      * Used to write data to KNX and listen to GAs
      */
     private ProcessCommunicatorImpl pc;
-
+    private String individualAddress = null;
+    
     /**
      * Start KNX communication with with ROUTING mode (224.0.23.12:3671)
      *
      * @param individualAddress
      */
-    public Knx(String individualAddress) {
+    public Knx(String individualAddress) throws KnxException {
+        this();
+        setIndividualAddress(individualAddress);
+    }
+
+    public Knx() {
         try {
             this.hostadr = InetAddress.getByName("224.0.23.12");
 
             // setup knx connection
             netlink = new KNXNetworkLinkIP(KNXNetworkLinkIP.ROUTING, null, new InetSocketAddress(hostadr, port), false, new TPSettings(false));
-            netlink.getKNXMedium().setDeviceAddress(new IndividualAddress(individualAddress));
+            
             pc = new ProcessCommunicatorImpl(netlink);
             log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
             pc.addProcessListener(ggal);
@@ -89,7 +93,23 @@ public class Knx {
             ex.printStackTrace();
         }
     }
+    
+    public void setIndividualAddress(String individualAddress) throws KnxException {
+        try {
+            netlink.getKNXMedium().setDeviceAddress(new IndividualAddress(individualAddress));
+            this.individualAddress = individualAddress;
+        } catch (KNXFormatException ex) {
+            throw new KnxException("Error setting indiviaual address to "+individualAddress, ex);
+        }
+    }
 
+    public String getIndividualAddress() {
+        return individualAddress;
+    }
+    
+    public boolean hasIndividualAddress() {
+        return individualAddress!=null;
+    }
     /**
      * DPT 16.001
      * 14 byte ISO8859-1 String
@@ -221,6 +241,14 @@ public class Knx {
             throw new KnxException("Error writing count", ex);
         }
     }
+    
+    /**
+     * DPT 6 8-bit signed value
+     *
+     * @param ga
+     * @param value value [-128..127] ^= 8bit signed
+     * @throws de.root1.slicknx.KnxException
+     */
 
     /**
      * DPT 7 16-bit unsigned value
@@ -274,6 +302,7 @@ public class Knx {
             List<GroupAddressListener> listenerslist = listeners.get(groupAddress);
             if (listenerslist == null) {
                 listenerslist = new ArrayList<>();
+                listeners.put(groupAddress, listenerslist);
             }
             listenerslist.add(listener);
         }
@@ -314,10 +343,11 @@ public class Knx {
 
         Knx knx = new Knx("1.1.254");
 
-        knx.addGroupAddressListener("1/1/15", new GroupAddressListener() {
+        knx.addGroupAddressListener("3/6/5", new GroupAddressListener() {
 
             @Override
             public void readRequest(GroupAddressEvent event) {
+                System.out.println("Read "+event.toString());
             }
 
             @Override
@@ -334,7 +364,13 @@ public class Knx {
             }
         });
 
-        knx.writeBoolean("1/1/15", true);
+        while (1!=0) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                java.util.logging.Logger.getLogger(Knx.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
 
     }
 

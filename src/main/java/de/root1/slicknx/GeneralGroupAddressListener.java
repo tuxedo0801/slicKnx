@@ -29,37 +29,36 @@ import tuwien.auto.calimero.process.ProcessListenerEx;
  * @author achristian
  */
 public class GeneralGroupAddressListener extends ProcessListenerEx {
-    
+
     private final Map<String, List<GroupAddressListener>> listeners;
     private final GroupAddressListener globalGroupAddressListener;
-
 
     GeneralGroupAddressListener(GroupAddressListener globalGroupAddressListener, Map<String, List<GroupAddressListener>> listeners) {
         this.listeners = listeners;
         this.globalGroupAddressListener = globalGroupAddressListener;
     }
-    
-    private void convertAndForward(ProcessEvent e){
-        
-        // convert
-        String destination = e.getDestination().toString();
-        GroupAddressEvent.Type type;
-        switch(e.getServiceCode()) {
-            case /* GROUP_READ */ 0x0:
-                type = GroupAddressEvent.Type.GROUP_READ;
-                break;
-            case /* GROUP_RESPONSE */ 0x40:
-                type = GroupAddressEvent.Type.GROUP_RESPONSE;
-                break;
-            case /* GROUP_WRITE */ 0x80:
-                type = GroupAddressEvent.Type.GROUP_WRITE;
-                break;
-        }
-        
-        GroupAddressEvent gae = new GroupAddressEvent(e.getSourceAddr().toString(), destination, GroupAddressEvent.Type.GROUP_READ, e.getASDU());
-        
-        if (globalGroupAddressListener!=null) {
-            switch(gae.getType()) {
+
+    private void convertAndForward(ProcessEvent e) {
+        try {
+            // convert
+            String destination = e.getDestination().toString();
+            GroupAddressEvent.Type type = GroupAddressEvent.Type.UNDEFINED;
+            switch (e.getServiceCode()) {
+                case /* GROUP_READ */ 0x0:
+                    type = GroupAddressEvent.Type.GROUP_READ;
+                    break;
+                case /* GROUP_RESPONSE */ 0x40:
+                    type = GroupAddressEvent.Type.GROUP_RESPONSE;
+                    break;
+                case /* GROUP_WRITE */ 0x80:
+                    type = GroupAddressEvent.Type.GROUP_WRITE;
+                    break;
+            }
+
+            GroupAddressEvent gae = new GroupAddressEvent(e.getSourceAddr().toString(), destination, type, e.getASDU());
+
+            if (globalGroupAddressListener != null) {
+                switch (gae.getType()) {
                     case GROUP_READ:
                         globalGroupAddressListener.readRequest(gae);
                         break;
@@ -70,24 +69,29 @@ public class GeneralGroupAddressListener extends ProcessListenerEx {
                         globalGroupAddressListener.write(gae);
                         break;
                 }
-        }
-        
-        // forward
-        synchronized(listeners) {
-            List<GroupAddressListener> list = listeners.get(destination);
-            for (GroupAddressListener listener : list) {
-                switch(gae.getType()) {
-                    case GROUP_READ:
-                        listener.readRequest(gae);
-                        break;
-                    case GROUP_RESPONSE:
-                        listener.readResponse(gae);
-                        break;
-                    case GROUP_WRITE:
-                        listener.write(gae);
-                        break;
+            }
+            // forward
+            synchronized (listeners) {
+                List<GroupAddressListener> list = listeners.get(destination);
+                if (list != null) {
+                    System.out.println("Forward " + gae + " to " + list.size() + " listeners");
+                    for (GroupAddressListener listener : list) {
+                        switch (gae.getType()) {
+                            case GROUP_READ:
+                                listener.readRequest(gae);
+                                break;
+                            case GROUP_RESPONSE:
+                                listener.readResponse(gae);
+                                break;
+                            case GROUP_WRITE:
+                                listener.write(gae);
+                                break;
+                        }
+                    }
                 }
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -110,5 +114,5 @@ public class GeneralGroupAddressListener extends ProcessListenerEx {
     public void detached(DetachEvent e) {
         // not of interest
     }
-    
+
 }
