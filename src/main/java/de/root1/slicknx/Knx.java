@@ -233,7 +233,7 @@ public final class Knx {
      * @param scale value [0..100], i.e. %
      * @throws de.root1.slicknx.KnxException
      */
-    public void writeScale(String ga, int scale) throws KnxException {
+    public void writeScaled(String ga, int scale) throws KnxException {
         checkGa(ga);
         try {
             pc.write(new GroupAddress(ga), scale, ProcessCommunicationBase.SCALING);
@@ -263,7 +263,8 @@ public final class Knx {
     }
 
     /**
-     * DPT 5.010 DPT 5.005
+     * DPT 5.005
+     * DPT 5.010 
      *
      * @param ga
      * @param value value [0..255]

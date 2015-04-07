@@ -110,6 +110,7 @@ public class GroupAddressEvent {
     }
 
     /**
+     * DPT 5.005
      * DPT 5.010
      *
      * @return 8 bit value 0..255
@@ -124,10 +125,26 @@ public class GroupAddressEvent {
             throw new KnxFormatException(ex);
         }
     }
+    
+    /**
+     * DPT 5.001
+     *
+     * @return 8 bit value 0..255 mapped to 0..100, f.i. %
+     * @throws KnxFormatException
+     */
+    public int asScaled() throws KnxFormatException {
+        try {
+            final DPTXlator8BitUnsigned t = new DPTXlator8BitUnsigned(ProcessCommunicationBase.SCALING);
+            t.setData(data);
+            return t.getValueUnsigned();
+        } catch (KNXFormatException ex) {
+            throw new KnxFormatException(ex);
+        }
+    }
 
     /**
      * DPT 5.003
-     * @return 8 bit value mapped to range 0..360
+     * @return 8 bit value 0..255 mapped to 0..360°
      * @throws KnxFormatException
      */
     public int asAngle() throws KnxFormatException {
