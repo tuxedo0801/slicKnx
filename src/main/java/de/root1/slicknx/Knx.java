@@ -22,16 +22,20 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tuwien.auto.calimero.DetachEvent;
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.datapoint.StateDP;
+import tuwien.auto.calimero.dptxlator.DPTXlator;
+import tuwien.auto.calimero.dptxlator.DPTXlator4ByteFloat;
+import tuwien.auto.calimero.dptxlator.DPTXlator8BitUnsigned;
+import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.exception.KNXException;
 import tuwien.auto.calimero.exception.KNXFormatException;
 import tuwien.auto.calimero.exception.KNXTimeoutException;
@@ -45,7 +49,7 @@ import tuwien.auto.calimero.process.ProcessCommunicatorImpl;
  *
  * @author achristian
  */
-public class Knx {
+public final class Knx {
 
     private static final Logger log = LoggerFactory.getLogger(Knx.class);
 
@@ -64,10 +68,25 @@ public class Knx {
     private ProcessCommunicatorImpl pc;
     private String individualAddress = null;
     
+    static {
+        
+        // add own DPT types, if necessary
+        Map allTypes = TranslatorTypes.getAllMainTypes();
+        if (!allTypes.containsKey(TranslatorTypes.TYPE_8BIT_SIGNED)) {
+            
+            String desc = "8 Bit signed value (main type 6)";
+            
+            allTypes.put(TranslatorTypes.TYPE_8BIT_SIGNED, new TranslatorTypes.MainType(TranslatorTypes.TYPE_8BIT_SIGNED,
+					DPTXlator8BitSigned.class, desc));
+            
+        }
+    }
+    
     /**
      * Start KNX communication with with ROUTING mode (224.0.23.12:3671)
      *
      * @param individualAddress
+     * @throws de.root1.slicknx.KnxException
      */
     public Knx(String individualAddress) throws KnxException {
         this();
@@ -94,6 +113,11 @@ public class Knx {
         }
     }
     
+    /**
+     * sets the own physical, individual address. f.i. "1.1.123"
+     * @param individualAddress individual address with dot-notation. f.i. "1.1.123"
+     * @throws KnxException 
+     */
     public void setIndividualAddress(String individualAddress) throws KnxException {
         try {
             netlink.getKNXMedium().setDeviceAddress(new IndividualAddress(individualAddress));
@@ -103,10 +127,18 @@ public class Knx {
         }
     }
 
+    /**
+     * Return the individual address or <code>null</code> in case of no address has been set.
+     * @return individual address
+     */
     public String getIndividualAddress() {
         return individualAddress;
     }
     
+    /**
+     * Returns whether an individual address has been set 
+     * @return true if individual address has been set, false if not
+     */
     public boolean hasIndividualAddress() {
         return individualAddress!=null;
     }
@@ -216,8 +248,12 @@ public class Knx {
      * @param ga
      * @param angle value [0..360], i.e. °C
      * @throws de.root1.slicknx.KnxException
+     * @throws IllegalArgumentException in case of wrong value
      */
     public void writeAngle(String ga, int angle) throws KnxException {
+        if (angle<0 || angle >360) {
+            throw new IllegalArgumentException("Angle must be between 0..360, but was: "+angle);
+        }
         checkGa(ga);
         try {
             pc.write(new GroupAddress(ga), angle, ProcessCommunicationBase.ANGLE);
@@ -230,15 +266,19 @@ public class Knx {
      * DPT 5.010 DPT 5.005
      *
      * @param ga
-     * @param count value [0..255], i.e. absolute 8-bit dimm value
+     * @param value value [0..255]
      * @throws de.root1.slicknx.KnxException
+     * @throws IllegalArgumentException in case of wrong value
      */
-    public void writeCount(String ga, int count) throws KnxException {
+    public void writeUnscaled(String ga, int value) throws KnxException {
+        if (value<0 || value >255) {
+            throw new IllegalArgumentException("value must be between 0..255, but was: "+value);
+        }
         checkGa(ga);
         try {
-            pc.write(new GroupAddress(ga), count, ProcessCommunicationBase.UNSCALED);
+            pc.write(new GroupAddress(ga), value, ProcessCommunicationBase.UNSCALED);
         } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException ex) {
-            throw new KnxException("Error writing count", ex);
+            throw new KnxException("Error writing unscaled", ex);
         }
     }
     
@@ -249,6 +289,19 @@ public class Knx {
      * @param value value [-128..127] ^= 8bit signed
      * @throws de.root1.slicknx.KnxException
      */
+    public void writeDpt6(String ga, int value) throws KnxException {
+        if (value<-128 || value >127) {
+            throw new IllegalArgumentException("value must be between -128..127, but was: "+value);
+        }
+        checkGa(ga);
+        try {
+            StateDP dp = new StateDP(new GroupAddress(ga), "6.001", 6, "6.001");
+            pc.write(dp, Integer.toString(value));
+
+        } catch (KNXException ex) {
+            throw new KnxException("Error writing dpt7", ex);
+        }
+    }
 
     /**
      * DPT 7 16-bit unsigned value
@@ -256,8 +309,13 @@ public class Knx {
      * @param ga
      * @param value value [0..65535] ^= 16bit unsigned
      * @throws de.root1.slicknx.KnxException
+     * @throws IllegalArgumentException in case of wrong value
      */
+        
     public void writeDpt7(String ga, int value) throws KnxException {
+        if (value<0 || value >65535) {
+            throw new IllegalArgumentException("value must be between 0..65535, but was: "+value);
+        }
         checkGa(ga);
         try {
 
@@ -274,10 +332,13 @@ public class Knx {
      * DPT 7 16-bit unsigned value
      *
      * @param ga
-     * @param value value [-32768-32767] ^= 16bit signed
+     * @param value value [-32768..32767] ^= 16bit signed
      * @throws de.root1.slicknx.KnxException
      */
     public void writeDpt8(String ga, int value) throws KnxException {
+        if (value<-32768 || value >32767) {
+            throw new IllegalArgumentException("value must be between -32768..32767, but was: "+value);
+        }
         checkGa(ga);
         try {
 
@@ -343,11 +404,11 @@ public class Knx {
 
         Knx knx = new Knx("1.1.254");
 
-        knx.addGroupAddressListener("3/6/5", new GroupAddressListener() {
+        knx.addGroupAddressListener("1/1/200", new GroupAddressListener() {
 
             @Override
             public void readRequest(GroupAddressEvent event) {
-                System.out.println("Read "+event.toString());
+                
             }
 
             @Override
@@ -357,12 +418,13 @@ public class Knx {
             @Override
             public void write(GroupAddressEvent event) {
                 try {
-                    System.out.println("Received update for 1/1/15: " + event.asBool());
+                    System.out.println("Received update for "+event.getDestination()+": " + event.asDpt6()+"|"+Arrays.toString(event.getData()));
                 } catch (KnxFormatException ex) {
                     ex.printStackTrace();
                 }
             }
         });
+        knx.writeDpt6("1/1/200", -125);
 
         while (1!=0) {
             try {

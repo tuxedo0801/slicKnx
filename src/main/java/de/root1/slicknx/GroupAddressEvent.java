@@ -30,6 +30,7 @@ import tuwien.auto.calimero.dptxlator.DPTXlatorString;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.exception.KNXException;
 import tuwien.auto.calimero.exception.KNXFormatException;
+import tuwien.auto.calimero.process.ProcessCommunicationBase;
 
 /**
  *
@@ -42,9 +43,10 @@ public class GroupAddressEvent {
     private final byte[] data;
 
     public enum Type {
+
         UNDEFINED, GROUP_READ, GROUP_RESPONSE, GROUP_WRITE
     };
-    
+
     private final Type type;
 
     GroupAddressEvent(String source, String destination, Type type, byte[] data) {
@@ -108,17 +110,29 @@ public class GroupAddressEvent {
     }
 
     /**
-     * Returns the data of the received event as unsigned 8 Bit datapoint value.
+     * DPT 5.010
      *
-     * @param scale see {@link ProcessCommunicator#readUnsigned(
-     *        tuwien.auto.calimero.GroupAddress, String)}
-     * @return the received value of type 8 Bit unsigned
-     * @throws KnxFormatException on not supported or not available 8 Bit
-     * unsigned DPT
+     * @return 8 bit value 0..255
+     * @throws KnxFormatException
      */
-    public int asUnsigned(final String scale) throws KnxFormatException {
+    public int asUnscaled() throws KnxFormatException {
         try {
-            final DPTXlator8BitUnsigned t = new DPTXlator8BitUnsigned(scale);
+            final DPTXlator8BitUnsigned t = new DPTXlator8BitUnsigned(ProcessCommunicationBase.UNSCALED);
+            t.setData(data);
+            return t.getValueUnsigned();
+        } catch (KNXFormatException ex) {
+            throw new KnxFormatException(ex);
+        }
+    }
+
+    /**
+     * DPT 5.003
+     * @return 8 bit value mapped to range 0..360
+     * @throws KnxFormatException
+     */
+    public int asAngle() throws KnxFormatException {
+        try {
+            final DPTXlator8BitUnsigned t = new DPTXlator8BitUnsigned(ProcessCommunicationBase.ANGLE);
             t.setData(data);
             return t.getValueUnsigned();
         } catch (KNXFormatException ex) {
@@ -129,6 +143,7 @@ public class GroupAddressEvent {
     /**
      * Returns the data of the received event as 3 Bit controlled datapoint
      * value.
+     * DPT 3.007
      *
      * @return the received value of type 3 Bit controlled
      * @throws KnxFormatException on not supported or not available 3 Bit
@@ -144,15 +159,33 @@ public class GroupAddressEvent {
             throw new KnxFormatException(ex);
         }
     }
+    
+    /**
+     * Returns the data of the received event as 8bit signed value.
+     * DPT 6
+     *
+     * @return the received value of type integer, containing only 8 bit signed
+     * @throws KnxFormatException on not supported or not available float DPT
+     */
+    public int asDpt6()
+            throws KnxFormatException {
+        try {
+            final DPTXlator8BitSigned t = new DPTXlator8BitSigned("6.010");
+            t.setData(data);
+            return (int) t.getNumericValue();
+        } catch (KNXFormatException ex) {
+            throw new KnxFormatException(ex);
+        }
+    }
 
     /**
-     * Returns the data of the received event as 2-byte KNX float datapoint
-     * value.
+     * Returns the data of the received event as 2-byte KNX float value.
+     * DPT 9.026
      *
      * @return the received value of type float
      * @throws KnxFormatException on not supported or not available float DPT
      */
-    public float asFloat() throws KnxFormatException {
+    public float as2ByteFloat() throws KnxFormatException {
         try {
             final DPTXlator2ByteFloat t = new DPTXlator2ByteFloat(
                     DPTXlator2ByteFloat.DPT_RAIN_AMOUNT);
@@ -164,35 +197,26 @@ public class GroupAddressEvent {
     }
 
     /**
-     * Returns the datapoint ASDU of the received event as either 2-byte or
-     * 4-byte KNX float value.
+     * Returns the data of the received event as 4-byte KNX float value.
+     * DPT 14.070
      *
-     * @param from4ByteFloat <true> to translate from 4-byte KNX float data,
-     * <false> to translate from 2-byte KNX float data
      * @return the received value of type double
      * @throws KnxFormatException on not supported or not available float DPT
      */
-    public double asFloat(final boolean from4ByteFloat)
+    public double as4ByteFloat()
             throws KnxFormatException {
         try {
-            if (from4ByteFloat) {
-                final DPTXlator4ByteFloat t = new DPTXlator4ByteFloat(
-                        DPTXlator4ByteFloat.DPT_TEMPERATURE_DIFFERENCE);
-                t.setData(data);
-                return t.getValueFloat();
-            } else {
-                final DPTXlator2ByteFloat t = new DPTXlator2ByteFloat(
-                        DPTXlator2ByteFloat.DPT_RAIN_AMOUNT);
-                t.setData(data);
-                return t.getValueDouble();
-            }
+            final DPTXlator4ByteFloat t = new DPTXlator4ByteFloat(
+                    DPTXlator4ByteFloat.DPT_TEMPERATURE_DIFFERENCE);
+            t.setData(data);
+            return t.getValueFloat();
         } catch (KNXFormatException ex) {
             throw new KnxFormatException(ex);
         }
     }
 
     /**
-     * Returns the data of the received event as string datapoint value.
+     * Returns the data of the received event as string value.
      * <p>
      * The used character set is ISO-8859-1 (Latin 1), with an allowed string
      * length of 14 characters.
@@ -237,7 +261,7 @@ public class GroupAddressEvent {
     public String toString() {
         return "GroupAddressEvent{" + "source=" + source + ", destination=" + destination + ", data=" + Arrays.toString(data) + ", type=" + type + '}';
     }
-    
+
     @Override
     public int hashCode() {
         int hash = 3;
