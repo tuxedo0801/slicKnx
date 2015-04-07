@@ -110,6 +110,7 @@ public class GroupAddressEvent {
     }
 
     /**
+     * Returns the data of the received event as 8 Bit signed, unscaled value
      * DPT 5.005
      * DPT 5.010
      *
@@ -127,6 +128,7 @@ public class GroupAddressEvent {
     }
     
     /**
+     * Returns the data of the received event as 8 Bit signed, 0..100 scaled (f.i. %) value.
      * DPT 5.001
      *
      * @return 8 bit value 0..255 mapped to 0..100, f.i. %
@@ -143,6 +145,7 @@ public class GroupAddressEvent {
     }
 
     /**
+     * Returns the data of the received event as 8 Bit signed, angle scaled value.
      * DPT 5.003
      * @return 8 bit value 0..255 mapped to 0..360°
      * @throws KnxFormatException
@@ -187,7 +190,7 @@ public class GroupAddressEvent {
     public int asDpt6()
             throws KnxFormatException {
         try {
-            final DPTXlator8BitSigned t = new DPTXlator8BitSigned("6.010");
+            final DPTXlator8BitSigned t = new DPTXlator8BitSigned(DPTXlator8BitSigned.DPT_VALUE_1_UCOUNT);
             t.setData(data);
             return (int) t.getNumericValue();
         } catch (KNXFormatException ex) {
@@ -197,7 +200,7 @@ public class GroupAddressEvent {
 
     /**
      * Returns the data of the received event as 2-byte KNX float value.
-     * DPT 9.026
+     * DPT 9.xxx, i.e. 9.001 for temperature
      *
      * @return the received value of type float
      * @throws KnxFormatException on not supported or not available float DPT
@@ -205,7 +208,7 @@ public class GroupAddressEvent {
     public float as2ByteFloat() throws KnxFormatException {
         try {
             final DPTXlator2ByteFloat t = new DPTXlator2ByteFloat(
-                    DPTXlator2ByteFloat.DPT_RAIN_AMOUNT);
+                    DPTXlator2ByteFloat.DPT_RAIN_AMOUNT /* using rainamount to get full 2byte spectrum */);
             t.setData(data);
             return (float) t.getValueDouble();
         } catch (KNXFormatException ex) {
@@ -215,7 +218,7 @@ public class GroupAddressEvent {
 
     /**
      * Returns the data of the received event as 4-byte KNX float value.
-     * DPT 14.070
+     * DPT 14.xxx, i.e. 14.070 for temperature difference
      *
      * @return the received value of type double
      * @throws KnxFormatException on not supported or not available float DPT
@@ -234,6 +237,7 @@ public class GroupAddressEvent {
 
     /**
      * Returns the data of the received event as string value.
+     * DPT16.001
      * <p>
      * The used character set is ISO-8859-1 (Latin 1), with an allowed string
      * length of 14 characters.
