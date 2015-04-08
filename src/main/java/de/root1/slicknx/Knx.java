@@ -43,7 +43,7 @@ import tuwien.auto.calimero.process.ProcessCommunicationBase;
 import tuwien.auto.calimero.process.ProcessCommunicatorImpl;
 
 /**
- * 
+ *
  * @author achristian
  */
 public final class Knx {
@@ -62,23 +62,23 @@ public final class Knx {
     /**
      * Used to write data to KNX and listen to GAs
      */
-    private ProcessCommunicatorImpl pc;
+    private SlicKnxProcessCommunicatorImpl pc;
     private String individualAddress = null;
-    
+
     static {
-        
+
         // add own DPT types, if necessary
         Map allTypes = TranslatorTypes.getAllMainTypes();
         if (!allTypes.containsKey(TranslatorTypes.TYPE_8BIT_SIGNED)) {
-            
+
             String desc = "8 Bit signed value (main type 6)";
-            
+
             allTypes.put(TranslatorTypes.TYPE_8BIT_SIGNED, new TranslatorTypes.MainType(TranslatorTypes.TYPE_8BIT_SIGNED,
-					DPTXlator8BitSigned.class, desc));
-            
+                    DPTXlator8BitSigned.class, desc));
+
         }
     }
-    
+
     /**
      * Start KNX communication with with ROUTING mode (224.0.23.12:3671)
      *
@@ -96,8 +96,8 @@ public final class Knx {
 
             // setup knx connection
             netlink = new KNXNetworkLinkIP(KNXNetworkLinkIP.ROUTING, null, new InetSocketAddress(hostadr, port), false, new TPSettings(false));
-            
-            pc = new ProcessCommunicatorImpl(netlink);
+
+            pc = new SlicKnxProcessCommunicatorImpl(netlink);
             log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
             pc.addProcessListener(ggal);
         } catch (KNXException ex) {
@@ -109,48 +109,58 @@ public final class Knx {
             ex.printStackTrace();
         }
     }
-    
+
     /**
      * sets the own physical, individual address. f.i. "1.1.123"
-     * @param individualAddress individual address with dot-notation. f.i. "1.1.123"
-     * @throws KnxException 
+     *
+     * @param individualAddress individual address with dot-notation. f.i.
+     * "1.1.123"
+     * @throws KnxException
      */
     public void setIndividualAddress(String individualAddress) throws KnxException {
         try {
             netlink.getKNXMedium().setDeviceAddress(new IndividualAddress(individualAddress));
             this.individualAddress = individualAddress;
         } catch (KNXFormatException ex) {
-            throw new KnxException("Error setting indiviaual address to "+individualAddress, ex);
+            throw new KnxException("Error setting indiviaual address to " + individualAddress, ex);
         }
     }
 
     /**
-     * Return the individual address or <code>null</code> in case of no address has been set.
+     * Return the individual address or <code>null</code> in case of no address
+     * has been set.
+     *
      * @return individual address
      */
     public String getIndividualAddress() {
         return individualAddress;
     }
-    
+
     /**
-     * Returns whether an individual address has been set 
+     * Returns whether an individual address has been set
+     *
      * @return true if individual address has been set, false if not
      */
     public boolean hasIndividualAddress() {
-        return individualAddress!=null;
+        return individualAddress != null;
     }
+
     /**
-     * DPT 16.001
-     * 14 byte ISO8859-1 String
+     * DPT 16.001 14 byte ISO8859-1 String
      *
+     * @param isResponse
      * @param ga
      * @param string
      * @throws de.root1.slicknx.KnxException
      */
-    public void writeString(String ga, String string) throws KnxException {
+    public void writeString(boolean isResponse, String ga, String string) throws KnxException {
         checkGa(ga);
         try {
-            pc.write(new GroupAddress(ga), string);
+            if (isResponse) {
+                pc.writeResponse(new GroupAddress(ga), ga);
+            } else {
+                pc.write(new GroupAddress(ga), string);
+            }
         } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException ex) {
             throw new KnxException("Error writing string", ex);
         }
@@ -159,14 +169,19 @@ public final class Knx {
     /**
      * DPT 1
      *
+     * @param isResponse
      * @param ga
      * @param bool
      * @throws de.root1.slicknx.KnxException
      */
-    public void writeBoolean(String ga, boolean bool) throws KnxException {
+    public void writeBoolean(boolean isResponse, String ga, boolean bool) throws KnxException {
         checkGa(ga);
         try {
-            pc.write(new GroupAddress(ga), bool);
+            if (isResponse) {
+                pc.writeResponse(new GroupAddress(ga), bool);
+            } else {
+                pc.write(new GroupAddress(ga), bool);
+            }
         } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException ex) {
             throw new KnxException("Error writing boolean", ex);
         }
@@ -175,14 +190,19 @@ public final class Knx {
     /**
      * DPT 9
      *
+     * @param isResponse
      * @param ga
      * @param f float value [-671088,64-670760,96]
      * @throws de.root1.slicknx.KnxException
      */
-    public void write2ByteFloat(String ga, float f) throws KnxException {
+    public void write2ByteFloat(boolean isResponse, String ga, float f) throws KnxException {
         checkGa(ga);
         try {
-            pc.write(new GroupAddress(ga), f, false);
+            if (isResponse) {
+                pc.writeResponse(new GroupAddress(ga), f, false);
+            } else {
+                pc.write(new GroupAddress(ga), f, false);
+            }
         } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException ex) {
             throw new KnxException("Error writing 2byte float", ex);
         }
@@ -191,33 +211,42 @@ public final class Knx {
     /**
      * DPT 14
      *
+     * @param isResponse
      * @param ga
      * @param f 4 byte float value
      * @throws de.root1.slicknx.KnxException
      */
-    public void write4ByteFloat(String ga, float f) throws KnxException {
+    public void write4ByteFloat(boolean isResponse, String ga, float f) throws KnxException {
         checkGa(ga);
         try {
-            pc.write(new GroupAddress(ga), f, true);
+            if (isResponse) {
+                pc.writeResponse(new GroupAddress(ga), f, true);
+            } else {
+                pc.write(new GroupAddress(ga), f, true);
+            }
         } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException ex) {
             throw new KnxException("Error writing 4byte float", ex);
         }
     }
 
     /**
-     * DPT 3
-     * Dimming (POsition, Control, Value)
+     * DPT 3 Dimming (POsition, Control, Value)
      *
+     * @param isResponse
      * @param ga
      * @param control start=true, stop=false, increase=true, decrease=false,
      * down=true, up=false
      * @param stepcode value [0..7]
      * @throws de.root1.slicknx.KnxException
      */
-    public void writeControl(String ga, boolean control, int stepcode) throws KnxException {
+    public void writeControl(boolean isResponse, String ga, boolean control, int stepcode) throws KnxException {
         checkGa(ga);
         try {
-            pc.write(new GroupAddress(ga), control, stepcode);
+            if (isResponse) {
+                pc.writeResponse(new GroupAddress(ga), control, stepcode);
+            } else {
+                pc.write(new GroupAddress(ga), control, stepcode);
+            }
         } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException ex) {
             throw new KnxException("Error writing control", ex);
         }
@@ -226,14 +255,19 @@ public final class Knx {
     /**
      * DPT 5.001
      *
+     * @param isResponse
      * @param ga
      * @param scale value [0..100], i.e. %
      * @throws de.root1.slicknx.KnxException
      */
-    public void writeScaled(String ga, int scale) throws KnxException {
+    public void writeScaled(boolean isResponse, String ga, int scale) throws KnxException {
         checkGa(ga);
         try {
-            pc.write(new GroupAddress(ga), scale, ProcessCommunicationBase.SCALING);
+            if (isResponse) {
+                pc.writeResponse(new GroupAddress(ga), scale, ProcessCommunicationBase.SCALING);
+            } else {
+                pc.write(new GroupAddress(ga), scale, ProcessCommunicationBase.SCALING);
+            }
         } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException ex) {
             throw new KnxException("Error writing scale", ex);
         }
@@ -242,59 +276,73 @@ public final class Knx {
     /**
      * DPT 5.003
      *
+     * @param isResponse
      * @param ga
      * @param angle value [0..360], i.e. °C
      * @throws de.root1.slicknx.KnxException
      * @throws IllegalArgumentException in case of wrong value
      */
-    public void writeAngle(String ga, int angle) throws KnxException {
-        if (angle<0 || angle >360) {
-            throw new IllegalArgumentException("Angle must be between 0..360, but was: "+angle);
+    public void writeAngle(boolean isResponse, String ga, int angle) throws KnxException {
+        if (angle < 0 || angle > 360) {
+            throw new IllegalArgumentException("Angle must be between 0..360, but was: " + angle);
         }
         checkGa(ga);
         try {
-            pc.write(new GroupAddress(ga), angle, ProcessCommunicationBase.ANGLE);
+            if (isResponse) {
+                pc.writeResponse(new GroupAddress(ga), angle, ProcessCommunicationBase.ANGLE);
+            } else {
+                pc.write(new GroupAddress(ga), angle, ProcessCommunicationBase.ANGLE);
+            }
         } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException ex) {
             throw new KnxException("Error writing angle", ex);
         }
     }
 
     /**
-     * DPT 5.005
-     * DPT 5.010 
+     * DPT 5.005 DPT 5.010
      *
+     * @param isResponse
      * @param ga
      * @param value value [0..255]
      * @throws de.root1.slicknx.KnxException
      * @throws IllegalArgumentException in case of wrong value
      */
-    public void writeUnscaled(String ga, int value) throws KnxException {
-        if (value<0 || value >255) {
-            throw new IllegalArgumentException("value must be between 0..255, but was: "+value);
+    public void writeUnscaled(boolean isResponse, String ga, int value) throws KnxException {
+        if (value < 0 || value > 255) {
+            throw new IllegalArgumentException("value must be between 0..255, but was: " + value);
         }
         checkGa(ga);
         try {
-            pc.write(new GroupAddress(ga), value, ProcessCommunicationBase.UNSCALED);
+            if (isResponse) {
+                pc.writeResponse(new GroupAddress(ga), value, ProcessCommunicationBase.UNSCALED);
+            } else {
+                pc.write(new GroupAddress(ga), value, ProcessCommunicationBase.UNSCALED);
+            }
         } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException ex) {
             throw new KnxException("Error writing unscaled", ex);
         }
     }
-    
+
     /**
      * DPT 6 8-bit signed value
      *
+     * @param isResponse
      * @param ga
      * @param value value [-128..127] ^= 8bit signed
      * @throws de.root1.slicknx.KnxException
      */
-    public void writeDpt6(String ga, int value) throws KnxException {
-        if (value<-128 || value >127) {
-            throw new IllegalArgumentException("value must be between -128..127, but was: "+value);
+    public void writeDpt6(boolean isResponse, String ga, int value) throws KnxException {
+        if (value < -128 || value > 127) {
+            throw new IllegalArgumentException("value must be between -128..127, but was: " + value);
         }
         checkGa(ga);
         try {
             StateDP dp = new StateDP(new GroupAddress(ga), "6.001", 6, "6.001");
-            pc.write(dp, Integer.toString(value));
+            if (isResponse) {
+                pc.writeResponse(dp, Integer.toString(value));
+            } else {
+                pc.write(dp, Integer.toString(value));
+            }
 
         } catch (KNXException ex) {
             throw new KnxException("Error writing dpt7", ex);
@@ -304,50 +352,57 @@ public final class Knx {
     /**
      * DPT 7 16-bit unsigned value
      *
+     * @param isResponse
      * @param ga
      * @param value value [0..65535] ^= 16bit unsigned
      * @throws de.root1.slicknx.KnxException
      * @throws IllegalArgumentException in case of wrong value
      */
-        
-    public void writeDpt7(String ga, int value) throws KnxException {
-        if (value<0 || value >65535) {
-            throw new IllegalArgumentException("value must be between 0..65535, but was: "+value);
+    public void writeDpt7(boolean isResponse, String ga, int value) throws KnxException {
+        if (value < 0 || value > 65535) {
+            throw new IllegalArgumentException("value must be between 0..65535, but was: " + value);
         }
         checkGa(ga);
         try {
 
             StateDP dp = new StateDP(new GroupAddress(ga), "7.001", 7, "7.001");
-
-            pc.write(dp, Integer.toString(value));
+            if (isResponse) {
+                pc.writeResponse(dp, Integer.toString(value));
+            } else {
+                pc.write(dp, Integer.toString(value));
+            }
 
         } catch (KNXException ex) {
             throw new KnxException("Error writing dpt7", ex);
         }
     }
-    
+
     /**
      * DPT 7 16-bit unsigned value
      *
+     * @param isResponse
      * @param ga
      * @param value value [-32768..32767] ^= 16bit signed
      * @throws de.root1.slicknx.KnxException
      */
-    public void writeDpt8(String ga, int value) throws KnxException {
-        if (value<-32768 || value >32767) {
-            throw new IllegalArgumentException("value must be between -32768..32767, but was: "+value);
+    public void writeDpt8(boolean isResponse, String ga, int value) throws KnxException {
+        if (value < -32768 || value > 32767) {
+            throw new IllegalArgumentException("value must be between -32768..32767, but was: " + value);
         }
         checkGa(ga);
         try {
 
             StateDP dp = new StateDP(new GroupAddress(ga), "8.001", 7, "8.001");
-
-            pc.write(dp, Integer.toString(value));
+            if (isResponse) {
+                pc.writeResponse(dp, Integer.toString(value));
+            } else {
+                pc.write(dp, Integer.toString(value));
+            }
 
         } catch (KNXException ex) {
             throw new KnxException("Error writing dpt8", ex);
         }
-    }    
+    }
 
     /**
      * Add a listener for the specified group address.
@@ -366,10 +421,11 @@ public final class Knx {
             listenerslist.add(listener);
         }
     }
-    
+
     /**
      * Global listener for all group addresses
-     * @param listener 
+     *
+     * @param listener
      */
     public void setGlobalGroupAddressListener(GroupAddressListener listener) {
         this.globalGroupAddressListener = listener;
@@ -400,13 +456,19 @@ public final class Knx {
 
     public static void main(String[] args) throws UnknownHostException, KnxException {
 
-        Knx knx = new Knx("1.1.254");
+        final Knx knx = new Knx("1.1.254");
 
         knx.addGroupAddressListener("1/1/200", new GroupAddressListener() {
 
             @Override
             public void readRequest(GroupAddressEvent event) {
-                
+                try {
+                    System.out.println("Answering read request");
+                    knx.writeBoolean(true, "1/1/200", true);
+                } catch (KnxException ex) {
+                    ex.printStackTrace();
+                }
+
             }
 
             @Override
@@ -415,16 +477,10 @@ public final class Knx {
 
             @Override
             public void write(GroupAddressEvent event) {
-                try {
-                    System.out.println("Received update for "+event.getDestination()+": " + event.asDpt6()+"|"+Arrays.toString(event.getData()));
-                } catch (KnxFormatException ex) {
-                    ex.printStackTrace();
-                }
             }
         });
-        knx.writeDpt6("1/1/200", -125);
 
-        while (1!=0) {
+        while (1 != 0) {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException ex) {
