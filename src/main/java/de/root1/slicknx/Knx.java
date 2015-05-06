@@ -155,7 +155,7 @@ public final class Knx {
         checkGa(ga);
         try {
             if (isResponse) {
-                pc.writeResponse(new GroupAddress(ga), ga);
+                pc.writeResponse(new GroupAddress(ga), string);
             } else {
                 pc.write(new GroupAddress(ga), string);
             }
