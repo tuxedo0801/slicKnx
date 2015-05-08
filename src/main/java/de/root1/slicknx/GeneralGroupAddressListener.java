@@ -31,7 +31,7 @@ import tuwien.auto.calimero.process.ProcessListenerEx;
 public class GeneralGroupAddressListener extends ProcessListenerEx {
 
     private final Map<String, List<GroupAddressListener>> listeners;
-    private final GroupAddressListener globalGroupAddressListener;
+    private GroupAddressListener globalGroupAddressListener;
 
     GeneralGroupAddressListener(GroupAddressListener globalGroupAddressListener, Map<String, List<GroupAddressListener>> listeners) {
         this.listeners = listeners;
@@ -113,6 +113,14 @@ public class GeneralGroupAddressListener extends ProcessListenerEx {
     @Override
     public void detached(DetachEvent e) {
         // not of interest
+    }
+
+    void setMaster(GroupAddressListener listener) {
+        globalGroupAddressListener = listener;
+    }
+    
+    GroupAddressListener getMaster() {
+        return globalGroupAddressListener;
     }
 
 }

@@ -52,10 +52,9 @@ public final class Knx {
     private int port = 3671;
     private InetAddress hostadr;
 
-    private GroupAddressListener globalGroupAddressListener;
     private final Map<String, List<GroupAddressListener>> listeners = new HashMap<>();
 
-    private final GeneralGroupAddressListener ggal = new GeneralGroupAddressListener(globalGroupAddressListener, listeners);
+    private final GeneralGroupAddressListener ggal = new GeneralGroupAddressListener(null, listeners);
 
     /**
      * Used to write data to KNX and listen to GAs
@@ -426,7 +425,7 @@ public final class Knx {
      * @param listener
      */
     public void setGlobalGroupAddressListener(GroupAddressListener listener) {
-        this.globalGroupAddressListener = listener;
+        this.ggal.setMaster(listener);
     }
 
     /**
