@@ -16,6 +16,8 @@ public class GroupWrite {
     
     public static void main(String[] args) throws KnxException, InterruptedException {
         
+        args = new String[]{"1.1.128", "3/6/100", "03", "b1"};
+        
         if (args.length<3) {
             printHelp();
             System.exit(1);
@@ -27,7 +29,7 @@ public class GroupWrite {
         byte[] data = new byte[args.length-2];
         
         for(int i=2;i<args.length;i++) {
-            data[i-2] = Byte.parseByte(args[i], 16);
+            data[i-2] = (byte) (Integer.parseInt(args[i], 16)&0xff);
         }
         
         Knx knx = new Knx(source);
@@ -47,7 +49,7 @@ public class GroupWrite {
         System.out.println(" Example:");
         System.out.println("   1.1.128 3/6/100 02 58");
         System.out.println("");
-        System.out.println("   --> Sending from 1.1.128 to 3/6/100 two bytes (hex value only!): 02 58");
+        System.out.println("   --> Sending from 1.1.128 to 3/6/100 two bytes (unsigned hex value only!): 02 58");
         System.out.println("");
     }
     
