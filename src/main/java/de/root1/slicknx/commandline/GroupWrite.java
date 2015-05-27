@@ -16,10 +16,9 @@ public class GroupWrite {
     
     public static void main(String[] args) throws KnxException, InterruptedException {
         
-        args = new String[]{"1.1.128", "3/6/100", "02", "58"};
-        
         if (args.length<3) {
             printHelp();
+            System.exit(1);
         }
         
         String source = args[0];
@@ -33,10 +32,23 @@ public class GroupWrite {
         
         Knx knx = new Knx(source);
         knx.writeRaw(false, destination, data);
+        System.out.println("Done!\n");
+        
     }
 
     private static void printHelp() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        System.out.println("");
+        System.out.println(" slicKnx: GroupWrite, using Routing-Mode");
+        System.out.println("");
+        System.out.println(" Arguments:");
+        System.out.println("   <source> <destination> <data[]>");
+        System.out.println("");
+        System.out.println("");
+        System.out.println(" Example:");
+        System.out.println("   1.1.128 3/6/100 02 58");
+        System.out.println("");
+        System.out.println("   --> Sending from 1.1.128 to 3/6/100 two bytes (hex value only!): 02 58");
+        System.out.println("");
     }
     
 }
