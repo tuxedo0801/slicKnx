@@ -29,7 +29,7 @@ public class GroupMonitor {
                         result += " ";
                     }
                 }
-                return result;
+                return result.toUpperCase();
             }
 
             @Override
