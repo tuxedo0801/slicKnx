@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.datapoint.StateDP;
+import tuwien.auto.calimero.dptxlator.DPTXlator;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.exception.KNXException;
 import tuwien.auto.calimero.exception.KNXFormatException;
@@ -45,15 +46,15 @@ import tuwien.auto.calimero.process.ProcessCommunicationBase;
  * @author achristian
  */
 public final class Knx {
-
+    
     private static final Logger log = LoggerFactory.getLogger(Knx.class);
-
+    
     private KNXNetworkLinkIP netlink;
     private int port = 3671;
     private InetAddress hostadr;
-
+    
     private final Map<String, List<GroupAddressListener>> listeners = new HashMap<>();
-
+    
     private final GeneralGroupAddressListener ggal = new GeneralGroupAddressListener(null, listeners);
 
     /**
@@ -61,18 +62,18 @@ public final class Knx {
      */
     private SlicKnxProcessCommunicatorImpl pc;
     private String individualAddress = null;
-
+    
     static {
 
         // add own DPT types, if necessary
         Map allTypes = TranslatorTypes.getAllMainTypes();
         if (!allTypes.containsKey(TranslatorTypes.TYPE_8BIT_SIGNED)) {
-
+            
             String desc = "8 Bit signed value (main type 6)";
-
+            
             allTypes.put(TranslatorTypes.TYPE_8BIT_SIGNED, new TranslatorTypes.MainType(TranslatorTypes.TYPE_8BIT_SIGNED,
                     DPTXlator8BitSigned.class, desc));
-
+            
         }
     }
 
@@ -86,14 +87,14 @@ public final class Knx {
         this();
         setIndividualAddress(individualAddress);
     }
-
+    
     public Knx() {
         try {
             this.hostadr = InetAddress.getByName("224.0.23.12");
 
             // setup knx connection
             netlink = new KNXNetworkLinkIP(KNXNetworkLinkIP.ROUTING, null, new InetSocketAddress(hostadr, port), false, new TPSettings(false));
-
+            
             pc = new SlicKnxProcessCommunicatorImpl(netlink);
             log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
             pc.addProcessListener(ggal);
@@ -340,7 +341,7 @@ public final class Knx {
             } else {
                 pc.write(dp, Integer.toString(value));
             }
-
+            
         } catch (KNXException ex) {
             throw new KnxException("Error writing dpt7", ex);
         }
@@ -361,14 +362,14 @@ public final class Knx {
         }
         checkGa(ga);
         try {
-
+            
             StateDP dp = new StateDP(new GroupAddress(ga), "7.001", 7, "7.001");
             if (isResponse) {
                 pc.writeResponse(dp, Integer.toString(value));
             } else {
                 pc.write(dp, Integer.toString(value));
             }
-
+            
         } catch (KNXException ex) {
             throw new KnxException("Error writing dpt7", ex);
         }
@@ -388,14 +389,46 @@ public final class Knx {
         }
         checkGa(ga);
         try {
-
+            
             StateDP dp = new StateDP(new GroupAddress(ga), "8.001", 7, "8.001");
             if (isResponse) {
                 pc.writeResponse(dp, Integer.toString(value));
             } else {
                 pc.write(dp, Integer.toString(value));
             }
-
+            
+        } catch (KNXException ex) {
+            throw new KnxException("Error writing dpt8", ex);
+        }
+    }
+    
+    public void writeRaw(boolean isResponse, String ga, byte[] data) throws KnxException {
+        checkGa(ga);
+        try {
+            
+            DPTXlator t = new DPTXlator(data.length) {
+                
+                @Override
+                public String[] getAllValues() {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+                
+                @Override
+                public Map getSubTypes() {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+                
+                @Override
+                protected void toDPT(String value, short[] dst, int index) throws KNXFormatException {
+                    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                }
+                
+            };
+            
+            t.setData(data, 0);
+            
+            pc.write(new GroupAddress(ga), t);
+            
         } catch (KNXException ex) {
             throw new KnxException("Error writing dpt8", ex);
         }
@@ -446,17 +479,17 @@ public final class Knx {
             }
         }
     }
-
+    
     private void checkGa(String ga) throws RuntimeException {
-
+        
     }
-
+    
     public static void main(String[] args) throws UnknownHostException, KnxException {
-
+        
         final Knx knx = new Knx("1.1.254");
-
+        
         knx.addGroupAddressListener("1/1/200", new GroupAddressListener() {
-
+            
             @Override
             public void readRequest(GroupAddressEvent event) {
                 try {
@@ -465,18 +498,18 @@ public final class Knx {
                 } catch (KnxException ex) {
                     ex.printStackTrace();
                 }
-
+                
             }
-
+            
             @Override
             public void readResponse(GroupAddressEvent event) {
             }
-
+            
             @Override
             public void write(GroupAddressEvent event) {
             }
         });
-
+        
         while (1 != 0) {
             try {
                 Thread.sleep(1000);
@@ -484,7 +517,7 @@ public final class Knx {
                 java.util.logging.Logger.getLogger(Knx.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-
+        
     }
-
+    
 }
