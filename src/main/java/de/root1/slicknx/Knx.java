@@ -93,7 +93,7 @@ public final class Knx {
             this.hostadr = InetAddress.getByName("224.0.23.12");
 
             // setup knx connection
-            netlink = new KNXNetworkLinkIP(KNXNetworkLinkIP.ROUTING, null, new InetSocketAddress(hostadr, port), false, new TPSettings(false));
+            netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.ROUTING, null, new InetSocketAddress(hostadr, port), false, new TPSettings(false));
             
             pc = new SlicKnxProcessCommunicatorImpl(netlink);
             log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
