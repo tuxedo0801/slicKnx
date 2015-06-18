@@ -60,14 +60,30 @@ public class TestPropertyRead {
 //            ex.printStackTrace();
 //        }
         netlink.getKNXMedium().setDeviceAddress(new IndividualAddress("1.1.250"));
-        IndividualAddress remote = new IndividualAddress("1.1.14");
         
-        RemotePropertyServiceAdapter rpsa = new RemotePropertyServiceAdapter(netlink, remote, null, true);
-        PropertyClient pc = new PropertyClient(rpsa);
+//        IndividualAddress remote = new IndividualAddress("1.1.14");
+////        IndividualAddress remote = new IndividualAddress("1.1.251");
+//
+//        RemotePropertyServiceAdapter rpsa = new RemotePropertyServiceAdapter(netlink, remote, null, true);
+//        PropertyClient pc = new PropertyClient(rpsa);
+//        
+//        try {
+//            byte[] property = pc.getProperty(0 /* obj-index */, 56 /* prop-id */, 1 /* start */, 1 /* elements*/);
+//            System.out.println(Arrays.toString(property));
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
         
-        byte[] property = pc.getProperty(0 /* obj-index */, 56 /* prop-id */, 1 /* start */, 1 /* elements*/);
         
-        System.out.println(Arrays.toString(property));
+        
+        IndividualAddress remote2 = new IndividualAddress("1.1.251");
+
+        RemotePropertyServiceAdapter rpsa2 = new RemotePropertyServiceAdapter(netlink, remote2, null, true);
+        PropertyClient pc2 = new PropertyClient(rpsa2);
+        
+        byte[] property2 = pc2.getProperty(0 /* obj-index */, 56 /* prop-id */, 1 /* start */, 1 /* elements*/);
+        
+        System.out.println(Arrays.toString(property2));
     }
     
 }

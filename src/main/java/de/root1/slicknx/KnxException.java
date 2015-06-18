@@ -24,6 +24,10 @@ package de.root1.slicknx;
  */
 public class KnxException extends Exception {
 
+    public KnxException(String string) {
+        super(string);
+    }
+
     public KnxException(String message, Throwable cause) {
         super(message, cause);
     }

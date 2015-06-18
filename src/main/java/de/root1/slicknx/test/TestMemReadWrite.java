@@ -16,6 +16,7 @@ import tuwien.auto.calimero.link.KNXNetworkLinkIP;
 import tuwien.auto.calimero.link.medium.TPSettings;
 import tuwien.auto.calimero.mgmt.Destination;
 import tuwien.auto.calimero.mgmt.ManagementClientImpl;
+import tuwien.auto.calimero.mgmt.ManagementProceduresImpl;
 
 /**
  *
@@ -30,17 +31,26 @@ public class TestMemReadWrite {
         // setup knx connection
         SlicKNXNetworkLinkIP netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.ROUTING, null, new InetSocketAddress(hostadr, port), false, new TPSettings(false));
         netlink.getKNXMedium().setDeviceAddress(new IndividualAddress("1.1.250"));
-        IndividualAddress remote = new IndividualAddress("1.1.14");
+        
+        IndividualAddress remote = new IndividualAddress("1.1.251");
 
         
+        ManagementProceduresImpl mp = new ManagementProceduresImpl(netlink);
         ManagementClientImpl mc = new ManagementClientImpl(netlink);
-        Destination destination = mc.createDestination(remote, true);
         
 //        int accesslevel = mc.authorize(destination, new byte[]{0x10, 0x10, 0x10});
         
-        byte[] readMemory = mc.readMemory(destination, 0x0000, 10);
-//        mc.writeMemory(destination, 0x0000, new byte[]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09});
+//        byte[] readMemory = mp.readMemory(remote, 0x000, 10);
+        Destination destination = mc.createDestination(remote, true);
+        mc.writeMemory(destination, 0x00F0, new byte[]{0x00, 0x01, 0x02});
+        destination.destroy();
+        destination = mc.createDestination(remote, true);
+        mc.writeMemory(destination, 0x00F4, new byte[]{0x00, 0x01, 0x02});
+        destination.destroy();
         
+        destination = mc.createDestination(remote, true);
+        byte[] readMemory = mc.readMemory(destination, 0x00FF, 3);
+        destination.destroy();
         
         System.out.println(Arrays.toString(readMemory));
         

@@ -5,6 +5,8 @@
  */
 package de.root1.slicknx.test;
 
+import de.root1.slicknx.Knx;
+import de.root1.slicknx.KnxException;
 import de.root1.slicknx.SlicKNXNetworkLinkIP;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -24,32 +26,9 @@ import tuwien.auto.calimero.mgmt.TransportLayerImpl;
  */
 public class TestProgram {
     
-    public static void main(String[] args) throws KNXException, InterruptedException, UnknownHostException {
-        InetAddress hostadr = InetAddress.getByName("224.0.23.12");
-//        InetAddress hostadr = InetAddress.getByName("abb-ipr");
-        int port = 3671;
-
-        // setup knx connection
-        SlicKNXNetworkLinkIP netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.ROUTING, null, new InetSocketAddress(hostadr, port), false, new TPSettings(false));
-//        KNXNetworkLinkIP netlink = new KNXNetworkLinkIP(KNXNetworkLinkIP.TUNNELING, new InetSocketAddress("localhost", 0), new InetSocketAddress(hostadr, port), false, TPSettings.TP1);
-        netlink.getKNXMedium().setDeviceAddress(new IndividualAddress("1.1.250"));
-        
-        ManagementProceduresImpl mp = new ManagementProceduresImpl(netlink);
-        ManagementClientImpl mci = new ManagementClientImpl(netlink);
-//        System.out.println("Write address");
-//        mci.writeAddress(new IndividualAddress("15.15.21"));
-//        System.out.println("done");
-        
-        IndividualAddress device = new IndividualAddress("1.1.14");
-//        IndividualAddress device = new IndividualAddress("1.1.251");
-        
-//        final byte[] data = new byte[]{0x01, 0x02, 0x03, 0x04};
-//        mp.writeMemory(device, 0x00, data, false, false);
-        
-        byte[] readProperty = mci.readProperty(mci.createDestination(device, true), 0 /* obj-index */, 56 /* prop-id */, 1 /* start */, 1 /* elements*/);
-        
-        System.out.println("prop: "+Integer.toHexString(readProperty[0]));
-        
+    public static void main(String[] args) throws KNXException, InterruptedException, UnknownHostException, KnxException {
+        Knx knx = new Knx("1.1.250");
+        knx.restartDevice("1.1.251");
     }
     
 }
