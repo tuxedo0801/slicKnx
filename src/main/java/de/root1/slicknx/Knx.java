@@ -18,6 +18,7 @@
  */
 package de.root1.slicknx;
 
+import de.root1.slicknx.karduino.KarduinoManagement;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -144,7 +145,7 @@ public final class Knx {
         return individualAddress != null;
     }
     
-    public KarduinoManagement getKarduinoManagement() throws KnxException {
+    public KarduinoManagement createKarduinoManagement() throws KnxException {
         try {
             return new KarduinoManagement(netlink);
         } catch (KNXLinkClosedException ex) {

@@ -3,10 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.root1.slicknx;
+package de.root1.slicknx.karduino;
 
+import de.root1.slicknx.KnxException;
+import de.root1.slicknx.Utils;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tuwien.auto.calimero.IndividualAddress;
@@ -26,16 +29,13 @@ import tuwien.auto.calimero.mgmt.ManagementClientImpl;
  * @author achristian
  */
 public class KarduinoManagement {
-    
+
     private static final Logger log = LoggerFactory.getLogger(KarduinoManagement.class);
 
     private final ManagementClientImpl mc;
     private Destination dest;
-    private KNXNetworkLinkIP netlink;
 
-
-    KarduinoManagement(KNXNetworkLinkIP netlink) throws KNXLinkClosedException {
-        this.netlink = netlink;
+    public KarduinoManagement(KNXNetworkLinkIP netlink) throws KNXLinkClosedException {
         this.mc = new ManagementClientImpl(netlink);
     }
 
@@ -57,11 +57,29 @@ public class KarduinoManagement {
     }
 
     private synchronized void checkConnected() throws KnxException {
+        if (mc==null) {
+            throw new KnxException("KarduinoManagement already closed. Pls. create a new instance.");
+        }
         if (dest == null) {
             throw new KnxException("target device not connected or connection already closed");
         }
     }
 
+    public int authrorize() throws KnxException {
+        checkConnected();
+        try {
+            byte[] key = new byte[]{
+                (byte) 0x00,
+                (byte) 0x0E, 
+                (byte) 0x01, 
+                (byte) 0x0B };
+            
+            return mc.authorize(dest, key);
+        } catch (KNXDisconnectException | KNXTimeoutException | KNXRemoteException | KNXLinkClosedException | InterruptedException ex) {
+            throw new KnxException("Error while authenticating: "+ex.getMessage(), ex);
+        }
+    }
+    
     public synchronized boolean writeAddress(String address) throws KnxException {
         try {
 
@@ -85,7 +103,7 @@ public class KarduinoManagement {
             } finally {
                 disconnect();
             }
-            
+
             if (exists) {
                 log.info("Device exists ...");
             }
@@ -104,13 +122,13 @@ public class KarduinoManagement {
                         try {
                             final IndividualAddress[] list = mc.readAddress(false);
                             for (IndividualAddress ia : list) {
-                                System.out.println("ia: "+ia.toString());
+                                System.out.println("ia: " + ia.toString());
                             }
                             count = list.length;
                             if (count == 1 && !list[0].equals(new IndividualAddress(address))) {
                                 setAddr = true;
                             } else if (count == 1 && list[0].equals(new IndividualAddress(address))) {
-                                log.info("One device responded, but already has "+address+".");
+                                log.info("One device responded, but already has " + address + ".");
                             }
                         } catch (final KNXException e) {
                             // a device with newAddress exists but is not in programming mode,
@@ -182,18 +200,22 @@ public class KarduinoManagement {
         }
     }
 
-    public synchronized byte[] readProperty(int objIndex, int propertyId, int start, int elements) throws KnxException {
-        checkConnected();
-        try {
-            return mc.readProperty(dest, objIndex, propertyId, start, elements);
-        } catch (KNXTimeoutException | KNXRemoteException | KNXDisconnectException | KNXLinkClosedException | InterruptedException ex) {
-            throw new KnxException("Error reading property: " + ex.getMessage(), ex);
-        }
-    }
+//    public synchronized byte[] readProperty(int objIndex, int propertyId, int start, int elements) throws KnxException {
+//        checkConnected();
+//        try {
+//            return mc.readProperty(dest, objIndex, propertyId, start, elements);
+//        } catch (KNXTimeoutException | KNXRemoteException | KNXDisconnectException | KNXLinkClosedException | InterruptedException ex) {
+//            throw new KnxException("Error reading property: " + ex.getMessage(), ex);
+//        }
+//    }
 
     public synchronized void disconnect() {
         dest.destroy();
         dest = null;
+    }
+    
+    public void close() {
+        mc.detach();
     }
 
 }

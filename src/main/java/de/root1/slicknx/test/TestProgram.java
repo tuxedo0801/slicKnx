@@ -5,9 +5,10 @@
  */
 package de.root1.slicknx.test;
 
-import de.root1.slicknx.KarduinoManagement;
+import de.root1.slicknx.karduino.KarduinoManagement;
 import de.root1.slicknx.Knx;
 import de.root1.slicknx.KnxException;
+import de.root1.slicknx.Utils;
 import java.net.UnknownHostException;
 import tuwien.auto.calimero.exception.KNXException;
 
@@ -19,11 +20,14 @@ public class TestProgram {
     
     public static void main(String[] args) throws KNXException, InterruptedException, UnknownHostException, KnxException {
         Knx knx = new Knx("1.1.250");
-        KarduinoManagement deviceManagement = knx.getKarduinoManagement();
+        KarduinoManagement deviceManagement = knx.createKarduinoManagement();
         
         System.out.println("Press program button ...");
-        boolean writeAddress = deviceManagement.writeAddress("1.1.252");
-        System.out.println("done: "+writeAddress);
+//        boolean writeAddress = deviceManagement.writeAddress("1.1.252");
+        deviceManagement.connect("1.1.251");
+        
+        
+        deviceManagement.disconnect();
         
     }
     
