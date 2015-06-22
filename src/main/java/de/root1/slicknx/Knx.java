@@ -85,9 +85,6 @@ public final class Knx {
             
         }
     }
-    private ManagementProceduresImpl mp;
-    private TransportLayerImpl tl;
-    private final Map<IndividualAddress, Destination> destinationMap = new HashMap<>();
 
     /**
      * Start KNX communication with with ROUTING mode (224.0.23.12:3671)
@@ -156,101 +153,14 @@ public final class Knx {
         return individualAddress != null;
     }
     
-    // work around for implementation in TL, which unconditionally throws if dst exists
-    private Destination getOrCreateDestination(final IndividualAddress device) {
-        if (destinationMap.containsKey(device)) {
-            return destinationMap.get(device);
-        } else {
-            Destination destination = mc.createDestination(device, true);
-            destinationMap.put(device, destination);
-            return destination;
-        }
-    }
-    
-    private void destroy(Destination dest) {
-        destinationMap.remove(dest.getAddress());
-        dest.destroy();
-    }
-    
     public void restartDevice(String individualAddress) throws KNXException {
         Destination dest = mc.createDestination(new IndividualAddress(individualAddress),true);
         mc.restart(dest);
         dest.destroy();
     }
     
-    public MemoryAccess getMemoryAccess(String pa) throws KNXFormatException{
-        return new MemoryAccess(pa, mc);
-    }
-    
-    public boolean writeAddress(String individualAddress, boolean restart) throws KNXException {
-
-        IndividualAddress pa = new IndividualAddress(individualAddress);
-        
-        boolean exists = false;
-        try {
-            mc.readDeviceDesc(getOrCreateDestination(pa), 0);
-            exists = true;
-        } catch (final KNXDisconnectException | KNXTimeoutException e) {
-            // no remote endpoint answered, we proceed
-            // remote endpoint exists, but might not support CO mode, we proceed
-        } catch (InterruptedException e) {
-            throw new KNXException("interrupted", e);
-        }
-
-        boolean setAddr = false;
-        synchronized (mc) {
-            final int oldTimeout = mc.getResponseTimeout();
-//            final Destination verify = mc.createDestination(destination.getAddress(), true);
-            final Destination verify = getOrCreateDestination(pa);
-
-            try {
-                mc.setResponseTimeout(1);
-
-                // ??? this does not conform to spec, where no max. attempts are given
-                // the problem is that we potentially loop forever (which would be correct)
-                int attempts = 20;
-                int count = 0;
-                while (count != 1 && attempts-- > 0) {
-                    try {
-                        final IndividualAddress[] list = mc.readAddress(false);
-                        count = list.length;
-                        if (count == 1 && !list[0].equals(pa)) {
-                            setAddr = true;
-                        }
-                    } catch (final KNXException e) {
-                        // a device with newAddress exists but is not in programming mode,
-                        // bail out
-                        if (exists) {
-                            System.err.println("device exists but is not in programming mode, cancel writing address");
-                            return false;
-                        }
-                    }
-                    System.out.println("KNX devices in programming mode: " + count);
-                }
-                if (!setAddr) {
-                    return false;
-                }
-                mc.writeAddress(pa);
-                // if this throws, either programming failed, or its
-                // probably some network configuration issue
-                mc.readDeviceDesc(verify, 0);
-
-                if (restart) {
-                    mc.restart(verify);
-                } else {
-                    // keep device unresetted, to keep programming mode
-                }
-            } catch (InterruptedException e) {
-                throw new KNXException("interrupted", e);
-
-            } finally {
-                destroy(verify);
-//                verify.destroy();
-                mc.setResponseTimeout(oldTimeout);
-            }
-        }
-        return true;
-
+    public DeviceManagement getDeviceManagement() {
+        return new DeviceManagement(mc);
     }
     
 //    public void writeProperty(IndividualAddress physicalAddress, int objectId, int propertyId, int start, int numberOfElements, byte[] data) throws KNXException {
