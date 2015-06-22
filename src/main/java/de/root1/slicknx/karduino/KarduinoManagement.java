@@ -5,6 +5,7 @@
  */
 package de.root1.slicknx.karduino;
 
+import de.root1.slicknx.Knx;
 import de.root1.slicknx.KnxException;
 import de.root1.slicknx.Utils;
 import java.util.ArrayList;
@@ -25,7 +26,8 @@ import tuwien.auto.calimero.mgmt.KNXDisconnectException;
 import tuwien.auto.calimero.mgmt.ManagementClientImpl;
 
 /**
- *
+ * Class to manage an "KNX-on-Arduino" (Karduino) device.
+ * 
  * @author achristian
  */
 public class KarduinoManagement {
@@ -35,10 +37,19 @@ public class KarduinoManagement {
     private final ManagementClientImpl mc;
     private Destination dest;
 
+    /**
+     * Dont' use this constructor directly. Use {@link Knx#createKarduinoManagement() } instead.
+     * @param netlink
+     * @throws KNXLinkClosedException 
+     */
     public KarduinoManagement(KNXNetworkLinkIP netlink) throws KNXLinkClosedException {
         this.mc = new ManagementClientImpl(netlink);
     }
 
+    /**
+     * Restart a connected device. You have to be connected first!
+     * @throws KnxException 
+     */
     public synchronized void restart() throws KnxException {
         checkConnected();
         try {
@@ -48,6 +59,11 @@ public class KarduinoManagement {
         }
     }
 
+    /**
+     * Connect to device
+     * @param pa physical address to connect to
+     * @throws KnxException 
+     */
     public synchronized void connect(String pa) throws KnxException {
         try {
             dest = mc.createDestination(new IndividualAddress(pa), true);
@@ -56,6 +72,10 @@ public class KarduinoManagement {
         }
     }
 
+    /**
+     * check if connection is valid
+     * @throws KnxException 
+     */
     private synchronized void checkConnected() throws KnxException {
         if (mc==null) {
             throw new KnxException("KarduinoManagement already closed. Pls. create a new instance.");
@@ -65,6 +85,13 @@ public class KarduinoManagement {
         }
     }
 
+    /**
+     * Authrorize. Key is currently hard-coded: 0x00, 0x0E, 0x01, 0x0B
+     * You have to be connected first!
+     * 
+     * @return
+     * @throws KnxException 
+     */
     public int authorize() throws KnxException {
         checkConnected();
         try {
@@ -80,6 +107,12 @@ public class KarduinoManagement {
         }
     }
     
+    /**
+     * Writes address to device which is in programming mode
+     * @param address address to write to device
+     * @return success-flag
+     * @throws KnxException if f.i. a timeout occurs or more than one device is in programming mode 
+     */
     public synchronized boolean writeAddress(String address) throws KnxException {
         try {
 
@@ -169,6 +202,12 @@ public class KarduinoManagement {
         }
     }
 
+    /**
+     * read address of devices in programming mode
+     * @param oneAddressOnly if true, returns after first received addres. if false, the whole response timeout is waited for read responses
+     * @return list of addresses of devices which are in programming mode
+     * @throws KnxException 
+     */
     public List<String> readAddress(boolean oneAddressOnly) throws KnxException {
         try {
             IndividualAddress[] addresses = mc.readAddress(oneAddressOnly);
@@ -182,15 +221,30 @@ public class KarduinoManagement {
         }
     }
 
-    public synchronized void writeMem(int startAddr, byte[] data) throws InterruptedException, KnxException {
+    /**
+     * Writes data to karduino memory. Be warned: You have to know which address-area is safe to write to (f.i. don't overwrite the eeprom area where the physical address is stored!).
+     * You have to be connected first!
+     * @param startAddr the start-address
+     * @param data the data to write, beginnning at startAddr
+     * @throws KnxException 
+     */
+    public synchronized void writeMem(int startAddr, byte[] data) throws KnxException {
         checkConnected();
         try {
             mc.writeMemory(dest, startAddr, data);
-        } catch (KNXException ex) {
-            throw new KnxException("Error writing memory", ex);
+        } catch (KNXException | InterruptedException ex) {
+            throw new KnxException("Error writing memory: " + ex.getMessage(), ex);
         }
     }
 
+    /**
+     * Reading data from karduino memory. You have to be connected first!
+     * 
+     * @param startAddr address to start reading from
+     * @param bytes number of bytes to read
+     * @return bytes read
+     * @throws KnxException 
+     */
     public synchronized byte[] readMem(int startAddr, int bytes) throws KnxException {
         checkConnected();
         try {
@@ -209,11 +263,17 @@ public class KarduinoManagement {
 //        }
 //    }
 
+    /**
+     * Disconnect from karduino device. Reconnect to further manage a/another device
+     */
     public synchronized void disconnect() {
         dest.destroy();
         dest = null;
     }
     
+    /**
+     * close management interface
+     */
     public void close() {
         mc.detach();
     }
