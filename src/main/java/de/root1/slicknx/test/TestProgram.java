@@ -5,20 +5,11 @@
  */
 package de.root1.slicknx.test;
 
+import de.root1.slicknx.KarduinoManagement;
 import de.root1.slicknx.Knx;
 import de.root1.slicknx.KnxException;
-import de.root1.slicknx.SlicKNXNetworkLinkIP;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.exception.KNXException;
-import tuwien.auto.calimero.link.KNXNetworkLinkIP;
-import tuwien.auto.calimero.link.medium.TPSettings;
-import tuwien.auto.calimero.mgmt.Destination;
-import tuwien.auto.calimero.mgmt.ManagementClientImpl;
-import tuwien.auto.calimero.mgmt.ManagementProceduresImpl;
-import tuwien.auto.calimero.mgmt.TransportLayerImpl;
 
 /**
  *
@@ -28,7 +19,12 @@ public class TestProgram {
     
     public static void main(String[] args) throws KNXException, InterruptedException, UnknownHostException, KnxException {
         Knx knx = new Knx("1.1.250");
-        knx.restartDevice("1.1.251");
+        KarduinoManagement deviceManagement = knx.getKarduinoManagement();
+        
+        System.out.println("Press program button ...");
+        boolean writeAddress = deviceManagement.writeAddress("1.1.252");
+        System.out.println("done: "+writeAddress);
+        
     }
     
 }

@@ -39,11 +39,7 @@ import tuwien.auto.calimero.exception.KNXTimeoutException;
 import tuwien.auto.calimero.link.KNXLinkClosedException;
 import tuwien.auto.calimero.link.KNXNetworkLinkIP;
 import tuwien.auto.calimero.link.medium.TPSettings;
-import tuwien.auto.calimero.mgmt.Destination;
-import tuwien.auto.calimero.mgmt.KNXDisconnectException;
 import tuwien.auto.calimero.mgmt.ManagementClientImpl;
-import tuwien.auto.calimero.mgmt.ManagementProceduresImpl;
-import tuwien.auto.calimero.mgmt.TransportLayerImpl;
 import tuwien.auto.calimero.process.ProcessCommunicationBase;
 
 /**
@@ -66,10 +62,6 @@ public final class Knx {
      * Used to write data to KNX and listen to GAs
      */
     private SlicKnxProcessCommunicatorImpl pc;
-    /**
-     * Used to program knx devices
-     */
-    private ManagementClientImpl mc;
     private String individualAddress = null;
     
     static {
@@ -105,7 +97,6 @@ public final class Knx {
             netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.ROUTING, null, new InetSocketAddress(hostadr, port), false, new TPSettings(false));
             
             pc = new SlicKnxProcessCommunicatorImpl(netlink);
-            mc = new ManagementClientImpl(netlink);
             log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
             pc.addProcessListener(ggal);
         } catch (KNXException ex) {
@@ -153,28 +144,14 @@ public final class Knx {
         return individualAddress != null;
     }
     
-    public void restartDevice(String individualAddress) throws KNXException {
-        Destination dest = mc.createDestination(new IndividualAddress(individualAddress),true);
-        mc.restart(dest);
-        dest.destroy();
+    public KarduinoManagement getKarduinoManagement() throws KnxException {
+        try {
+            return new KarduinoManagement(netlink);
+        } catch (KNXLinkClosedException ex) {
+            throw new KnxException("Link closed", ex);
+        }
     }
     
-    public DeviceManagement getDeviceManagement() {
-        return new DeviceManagement(mc);
-    }
-    
-//    public void writeProperty(IndividualAddress physicalAddress, int objectId, int propertyId, int start, int numberOfElements, byte[] data) throws KNXException {
-//
-//        try {
-//            mc.writeProperty(mc.createDestination(physicalAddress, false),
-//                    objectId, propertyId, start, numberOfElements, data);
-//        } catch (InterruptedException ex) {
-//            throw new KNXException("Got interrup signal", ex);
-//        }
-//
-//    }
-    
-
     /**
      * DPT 16.001 14 byte ISO8859-1 String
      *
