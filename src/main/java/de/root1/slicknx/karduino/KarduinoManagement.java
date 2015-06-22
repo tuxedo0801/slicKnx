@@ -65,7 +65,7 @@ public class KarduinoManagement {
         }
     }
 
-    public int authrorize() throws KnxException {
+    public int authorize() throws KnxException {
         checkConnected();
         try {
             byte[] key = new byte[]{
