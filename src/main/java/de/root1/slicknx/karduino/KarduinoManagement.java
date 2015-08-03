@@ -7,10 +7,8 @@ package de.root1.slicknx.karduino;
 
 import de.root1.slicknx.Knx;
 import de.root1.slicknx.KnxException;
-import de.root1.slicknx.Utils;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tuwien.auto.calimero.IndividualAddress;
@@ -27,7 +25,7 @@ import tuwien.auto.calimero.mgmt.ManagementClientImpl;
 
 /**
  * Class to manage an "KNX-on-Arduino" (Karduino) device.
- * 
+ *
  * @author achristian
  */
 public class KarduinoManagement {
@@ -36,19 +34,28 @@ public class KarduinoManagement {
 
     private final ManagementClientImpl mc;
     private Destination dest;
+    private final KNXNetworkLinkIP netlink;
+    private final int RETRIES = 3;
+    private long lastActivity = System.currentTimeMillis();
+    private final long SEND_DELAY = 150;
 
     /**
-     * Dont' use this constructor directly. Use {@link Knx#createKarduinoManagement() } instead.
+     * Dont' use this constructor directly. Use {@link Knx#createKarduinoManagement()
+     * } instead.
+     *
      * @param netlink
-     * @throws KNXLinkClosedException 
+     * @throws KNXLinkClosedException
      */
     public KarduinoManagement(KNXNetworkLinkIP netlink) throws KNXLinkClosedException {
+        this.netlink = netlink;
         this.mc = new ManagementClientImpl(netlink);
+
     }
 
     /**
      * Restart a connected device. You have to be connected first!
-     * @throws KnxException 
+     *
+     * @throws KnxException
      */
     public synchronized void restart() throws KnxException {
         checkConnected();
@@ -60,11 +67,12 @@ public class KarduinoManagement {
     }
 
     /**
-     * Connect to device
-     * @param pa physical address to connect to
-     * @throws KnxException 
+     * set device to use for further method calls
+     *
+     * @param pa physical address to setTargetDevice to
+     * @throws KnxException
      */
-    public synchronized void connect(String pa) throws KnxException {
+    public synchronized void setTargetDevice(String pa) throws KnxException {
         try {
             dest = mc.createDestination(new IndividualAddress(pa), true);
         } catch (KNXFormatException ex) {
@@ -74,44 +82,70 @@ public class KarduinoManagement {
 
     /**
      * check if connection is valid
-     * @throws KnxException 
+     *
+     * @throws KnxException
      */
     private synchronized void checkConnected() throws KnxException {
-        if (mc==null) {
+        if (mc == null) {
             throw new KnxException("KarduinoManagement already closed. Pls. create a new instance.");
         }
         if (dest == null) {
             throw new KnxException("target device not connected or connection already closed");
         }
+        long now = System.currentTimeMillis();
+
+        // without this delay, we get something like "1.1.251 disconnected while awaiting ACK" exceptions
+        // from calimero when arduino responds. No idea why :-(
+        if (now-lastActivity<SEND_DELAY) {
+            long sleep = SEND_DELAY-(now-lastActivity);
+            log.debug("Sleeping "+sleep+" ms.");
+            try {
+                Thread.sleep(sleep);
+            } catch (InterruptedException ex) {
+            }
+        }
+        
+        
     }
 
+//    private void sleep() {
+//        System.out.print("Sleep ... ");
+//        try {
+//            Thread.sleep(1000);
+//        } catch (InterruptedException ex) {
+//        }
+//        System.out.println("*done*");
+//    }
+
     /**
-     * Authrorize. Key is currently hard-coded: 0x00, 0x0E, 0x01, 0x0B
-     * You have to be connected first!
-     * 
+     * Authrorize. Key is currently hard-coded: 0x00, 0x0E, 0x01, 0x0B You have
+     * to be connected first!
+     *
      * @return
-     * @throws KnxException 
+     * @throws KnxException
      */
     public int authorize() throws KnxException {
         checkConnected();
         try {
             byte[] key = new byte[]{
                 (byte) 0x00,
-                (byte) 0x0E, 
-                (byte) 0x01, 
-                (byte) 0x0B };
-            
+                (byte) 0x0E,
+                (byte) 0x01,
+                (byte) 0x0B};
+
             return mc.authorize(dest, key);
         } catch (KNXDisconnectException | KNXTimeoutException | KNXRemoteException | KNXLinkClosedException | InterruptedException ex) {
-            throw new KnxException("Error while authenticating: "+ex.getMessage(), ex);
+            throw new KnxException("Error while authenticating: " + ex.getMessage(), ex);
         }
     }
-    
+
     /**
      * Writes address to device which is in programming mode
+     *
      * @param address address to write to device
      * @return success-flag
-     * @throws KnxException if f.i. a timeout occurs or more than one device is in programming mode 
+     * @throws KnxException if f.i. a timeout occurs or more than one device is
+     * in programming mode
      */
     public synchronized boolean writeAddress(String address) throws KnxException {
         try {
@@ -120,7 +154,7 @@ public class KarduinoManagement {
                 throw new KnxException("can not write address when beeing connected. disconnect first.");
             }
 
-            connect(address);
+            setTargetDevice(address);
             boolean exists = false;
             try {
                 mc.readDeviceDesc(dest, 0);
@@ -134,7 +168,7 @@ public class KarduinoManagement {
             } catch (InterruptedException ex) {
                 log.warn("interrupted while checking for device", ex);
             } finally {
-                disconnect();
+                releaseTargetDevice();
             }
 
             if (exists) {
@@ -144,7 +178,7 @@ public class KarduinoManagement {
             boolean setAddr = false;
             synchronized (mc) {
                 final int oldTimeout = mc.getResponseTimeout();
-                connect(address);
+                setTargetDevice(address);
                 try {
                     mc.setResponseTimeout(1);
                     // ??? this does not conform to spec, where no max. attempts are given
@@ -188,7 +222,7 @@ public class KarduinoManagement {
                 } catch (KNXInvalidResponseException | KNXDisconnectException | InterruptedException ex) {
                     throw new KnxException("Error writing address: " + ex.getMessage(), ex);
                 } finally {
-                    disconnect();
+                    releaseTargetDevice();
                     mc.setResponseTimeout(oldTimeout);
                 }
             }
@@ -204,9 +238,11 @@ public class KarduinoManagement {
 
     /**
      * read address of devices in programming mode
-     * @param oneAddressOnly if true, returns after first received addres. if false, the whole response timeout is waited for read responses
+     *
+     * @param oneAddressOnly if true, returns after first received addres. if
+     * false, the whole response timeout is waited for read responses
      * @return list of addresses of devices which are in programming mode
-     * @throws KnxException 
+     * @throws KnxException
      */
     public List<String> readAddress(boolean oneAddressOnly) throws KnxException {
         try {
@@ -222,16 +258,19 @@ public class KarduinoManagement {
     }
 
     /**
-     * Writes data to karduino memory. Be warned: You have to know which address-area is safe to write to (f.i. don't overwrite the eeprom area where the physical address is stored!).
-     * You have to be connected first!
+     * Writes data to karduino memory. Be warned: You have to know which
+     * address-area is safe to write to (f.i. don't overwrite the eeprom area
+     * where the physical address is stored!). You have to be connected first!
+     *
      * @param startAddr the start-address
      * @param data the data to write, beginnning at startAddr
-     * @throws KnxException 
+     * @throws KnxException
      */
     public synchronized void writeMem(int startAddr, byte[] data) throws KnxException {
         checkConnected();
         try {
             mc.writeMemory(dest, startAddr, data);
+            lastActivity = System.currentTimeMillis();
         } catch (KNXException | InterruptedException ex) {
             throw new KnxException("Error writing memory: " + ex.getMessage(), ex);
         }
@@ -239,38 +278,60 @@ public class KarduinoManagement {
 
     /**
      * Reading data from karduino memory. You have to be connected first!
-     * 
+     *
      * @param startAddr address to start reading from
      * @param bytes number of bytes to read
      * @return bytes read
-     * @throws KnxException 
+     * @throws KnxException
      */
     public synchronized byte[] readMem(int startAddr, int bytes) throws KnxException {
         checkConnected();
-        try {
-            return mc.readMemory(dest, startAddr, bytes);
-        } catch (KNXTimeoutException | KNXDisconnectException | KNXRemoteException | KNXLinkClosedException | InterruptedException ex) {
-            throw new KnxException("Error reading memory: " + ex.getMessage(), ex);
+        int retries = RETRIES;
+        Throwable t = null;
+        while (retries > 0) {
+            try {
+                byte[] readMemory = mc.readMemory(dest, startAddr, bytes);
+                lastActivity = System.currentTimeMillis();
+                return readMemory;
+            } catch (KNXTimeoutException | KNXDisconnectException | KNXRemoteException | KNXLinkClosedException | InterruptedException ex) {
+                log.warn("Retrying due to {}", ex.getMessage(), ex);
+                t = ex;
+                retries--;
+                lastActivity = System.currentTimeMillis();
+            }
         }
+        throw new KnxException("Error reading memory after "+RETRIES+" retries: " + t.getMessage(), t);
     }
 
-//    public synchronized byte[] readProperty(int objIndex, int propertyId, int start, int elements) throws KnxException {
-//        checkConnected();
-//        try {
-//            return mc.readProperty(dest, objIndex, propertyId, start, elements);
-//        } catch (KNXTimeoutException | KNXRemoteException | KNXDisconnectException | KNXLinkClosedException | InterruptedException ex) {
-//            throw new KnxException("Error reading property: " + ex.getMessage(), ex);
-//        }
-//    }
+    public synchronized byte[] readProperty(int objIndex, int propertyId, int start, int elements) throws KnxException {
+        checkConnected();
+        int retries = RETRIES;
+        Throwable t = null;
+        while (retries > 0) {
+            try {
+                byte[] readProperty = mc.readProperty(dest, objIndex, propertyId, start, elements);
+                lastActivity = System.currentTimeMillis();
+                return readProperty;
+            } catch (KNXTimeoutException | KNXRemoteException | KNXDisconnectException | KNXLinkClosedException | InterruptedException ex) {
+                log.warn("Retrying due to {}", ex.getMessage(), ex);
+                t = ex;
+                retries--;
+                lastActivity = System.currentTimeMillis();
+            }
+        }
+        throw new KnxException("Error reading property after "+RETRIES+" retries: " + t.getMessage(), t);
+    }
 
     /**
-     * Disconnect from karduino device. Reconnect to further manage a/another device
+     * Disconnect from karduino device. Reconnect to further manage a/another
+     * device
      */
-    public synchronized void disconnect() {
+    public synchronized void releaseTargetDevice() {
         dest.destroy();
+        lastActivity = System.currentTimeMillis();
         dest = null;
     }
-    
+
     /**
      * close management interface
      */

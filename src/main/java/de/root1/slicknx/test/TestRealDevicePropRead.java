@@ -6,6 +6,7 @@
 package de.root1.slicknx.test;
 
 import de.root1.slicknx.SlicKNXNetworkLinkIP;
+import de.root1.slicknx.Utils;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -21,7 +22,7 @@ import tuwien.auto.calimero.mgmt.ManagementClientImpl;
  *
  * @author achristian
  */
-public class TestMemReadWrite {
+public class TestRealDevicePropRead {
     
     static ManagementClientImpl mc;
     static IndividualAddress remote;
@@ -43,41 +44,16 @@ public class TestMemReadWrite {
         SlicKNXNetworkLinkIP netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.ROUTING, null, new InetSocketAddress(hostadr, port), false, new TPSettings(false));
         netlink.getKNXMedium().setDeviceAddress(new IndividualAddress("1.1.250"));
         mc = new ManagementClientImpl(netlink);
-        remote = new IndividualAddress("1.1.251");
+        remote = new IndividualAddress("1.1.11");
         
+        connect();
+        int authorize = mc.authorize(destination, new byte[]{(byte)0xff, (byte)0xff, (byte)0xff, (byte)0xff});
+        System.out.println("authorize level: "+authorize);
         
-        
-        int sleep = 10;
-        byte[] readMemory;
-        
-//        mc.writeMemory(destination, 0x00F0, new byte[]{0x00, 0x01, 0x02});
-//        System.out.println("Write done");
-//        Thread.sleep(sleep);
-//        
-//        mc.writeMemory(destination, 0x00F4, new byte[]{0x00, 0x01, 0x02});
-//        System.out.println("Write done");
-//        Thread.sleep(sleep);
-//        
-//        mc.writeMemory(destination, 0x00F4, new byte[]{0x00, 0x01, 0x02});
-//        System.out.println("Write done");
-//        Thread.sleep(sleep);
-
-        int readCount = 100;
-        
-        
-        for (int i=0;i<readCount; i++) {
-            System.out.println("Count: "+i);
-            connect();
-            readMemory = mc.readMemory(destination, 0xF0, 1);
-            System.out.println("Read done: "+Arrays.toString(readMemory));
-            disconnect();
-//            Thread.sleep(1000);
-            
-        }
-        
-//        destination = mc.createDestination(remote, true);
-//        destination.destroy();
-        
+        byte[] readProperty = mc.readProperty(destination, 0, 55, 1, 1);
+        System.out.println(Utils.bytesToHex(readProperty));
+       
+        disconnect();
         
         // shutdown
         mc.detach();

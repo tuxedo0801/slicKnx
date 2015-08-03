@@ -37,10 +37,10 @@ import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.exception.KNXException;
 import tuwien.auto.calimero.exception.KNXFormatException;
 import tuwien.auto.calimero.exception.KNXTimeoutException;
+import tuwien.auto.calimero.knxnetip.KNXnetIPTunnel;
 import tuwien.auto.calimero.link.KNXLinkClosedException;
 import tuwien.auto.calimero.link.KNXNetworkLinkIP;
 import tuwien.auto.calimero.link.medium.TPSettings;
-import tuwien.auto.calimero.mgmt.ManagementClientImpl;
 import tuwien.auto.calimero.process.ProcessCommunicationBase;
 
 /**
@@ -90,7 +90,38 @@ public final class Knx {
         setIndividualAddress(individualAddress);
     }
     
-    public Knx() {
+    /**
+     * UNTESTED!!!! Start KNX communication with with TUNNELING mode
+     * @param individualAddress local individual address to use
+     * @param host
+     * @throws KnxException 
+     */
+    public Knx(String individualAddress, InetAddress host) throws KnxException {
+        this(host);
+        setIndividualAddress(individualAddress);
+    }
+    
+    /**
+     * UNTESTED!!!! Start KNX communication with with TUNNELING mode 
+     * @param host
+     * @throws KnxException
+     */
+    public Knx(InetAddress host) throws KnxException {
+        try {
+            
+            // setup knx connection
+//            netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.TUNNELING, null, new InetSocketAddress(host, port), false, new TPSettings(false));
+            netlink = new KNXNetworkLinkIP(host.getHostName(), new TPSettings(false));
+            
+            pc = new SlicKnxProcessCommunicatorImpl(netlink);
+            log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
+            pc.addProcessListener(ggal);
+        } catch (KNXException | InterruptedException ex) {
+            throw new KnxException("Error connecting to KNX: "+ex.getMessage(), ex);
+        }
+    }
+    
+    public Knx() throws KnxException {
         try {
             this.hostadr = InetAddress.getByName("224.0.23.12");
 
@@ -100,13 +131,8 @@ public final class Knx {
             pc = new SlicKnxProcessCommunicatorImpl(netlink);
             log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
             pc.addProcessListener(ggal);
-        } catch (KNXException ex) {
-            ex.printStackTrace();
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        } catch (UnknownHostException ex) {
-            // should not happen as address is pre-defined
-            ex.printStackTrace();
+        } catch (KNXException | InterruptedException | UnknownHostException ex) {
+            throw new KnxException("Error connecting to KNX: "+ex.getMessage(), ex);
         }
     }
 
