@@ -83,7 +83,7 @@ public final class Knx {
      * Start KNX communication with with ROUTING mode (224.0.23.12:3671)
      *
      * @param individualAddress
-     * @throws de.root1.slicknx.KnxException
+     * @throws KnxException if connection to knx(router, ...) fails
      */
     public Knx(String individualAddress) throws KnxException {
         this();
@@ -121,6 +121,10 @@ public final class Knx {
         }
     }
     
+    /**
+     * 
+     * @throws KnxException if connection to knx(router, ...) fails
+     */
     public Knx() throws KnxException {
         try {
             this.hostadr = InetAddress.getByName("224.0.23.12");
