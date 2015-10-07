@@ -31,17 +31,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.IndividualAddress;
+import tuwien.auto.calimero.datapoint.Datapoint;
 import tuwien.auto.calimero.datapoint.StateDP;
 import tuwien.auto.calimero.dptxlator.DPTXlator;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
 import tuwien.auto.calimero.exception.KNXException;
 import tuwien.auto.calimero.exception.KNXFormatException;
+import tuwien.auto.calimero.exception.KNXRemoteException;
 import tuwien.auto.calimero.exception.KNXTimeoutException;
 import tuwien.auto.calimero.knxnetip.KNXnetIPTunnel;
 import tuwien.auto.calimero.link.KNXLinkClosedException;
 import tuwien.auto.calimero.link.KNXNetworkLinkIP;
 import tuwien.auto.calimero.link.medium.TPSettings;
 import tuwien.auto.calimero.process.ProcessCommunicationBase;
+import tuwien.auto.calimero.xml.KNXMLException;
+import tuwien.auto.calimero.xml.XMLWriter;
 
 /**
  *
@@ -416,12 +420,13 @@ public final class Knx {
     }
 
     /**
-     * DPT 7 16-bit unsigned value
+     * DPT 8 16-bit signed value
      *
      * @param isResponse
      * @param ga
      * @param value value [-32768..32767] ^= 16bit signed
      * @throws de.root1.slicknx.KnxException
+     * @throws IllegalArgumentException in case of wrong value
      */
     public void writeDpt8(boolean isResponse, String ga, int value) throws KnxException {
         if (value < -32768 || value > 32767) {
@@ -472,6 +477,32 @@ public final class Knx {
         } catch (KNXException ex) {
             throw new KnxException("Error writing dpt8", ex);
         }
+    }
+    
+    public String readRawAsString(String ga) throws KnxException {
+        checkGa(ga);
+        
+        try {
+            return pc.read(new StateDP(new GroupAddress(ga), ""));
+        } catch (KNXException | InterruptedException ex) {
+            throw new KnxException("Error reading raw as string", ex);
+        }
+    }
+    
+    /**
+     * Readint DPT 9: 2 byte float
+     * @param ga groupaddress to read
+     * @return float value
+     * @throws KnxException 
+     */
+    public float readDpt9(String ga) throws KnxException {
+        checkGa(ga);
+        try {
+            float readFloat = pc.readFloat(new GroupAddress(ga), false);
+            return readFloat;
+        } catch (KNXTimeoutException | KNXLinkClosedException | KNXFormatException | KNXRemoteException | InterruptedException ex) {
+            throw new KnxException("Error reading 2byte float", ex);
+        } 
     }
 
     /**
