@@ -161,23 +161,22 @@ public final class Knx {
     }
 
     /**
-     * Return the individual address or <code>null</code> in case of no address
-     * has been set.
+     * Return the used individual address 
      *
      * @return individual address
      */
     public String getIndividualAddress() {
-        return individualAddress;
+        return netlink.getKNXMedium().getDeviceAddress().toString();
     }
 
-    /**
-     * Returns whether an individual address has been set
-     *
-     * @return true if individual address has been set, false if not
-     */
-    public boolean hasIndividualAddress() {
-        return individualAddress != null;
-    }
+//    /**
+//     * Returns whether an individual address has been set
+//     *
+//     * @return true if individual address has been set, false if not
+//     */
+//    public boolean hasIndividualAddress() {
+//        return individualAddress != null;
+//    }
     
     public KarduinoManagement createKarduinoManagement() throws KnxException {
         try {
@@ -589,6 +588,14 @@ public final class Knx {
             }
         }
         
+    }
+
+    /**
+     * Close knx connection properly.
+     */
+    public void close() {
+        pc.detach();
+        netlink.close();
     }
     
 }
