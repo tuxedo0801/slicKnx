@@ -18,37 +18,31 @@
  */
 package de.root1.slicknx;
 
+import de.root1.slicknx.dptxlator.DPTXlator8BitEnumeration;
+import de.root1.slicknx.dptxlator.DPTXlator8BitSigned;
 import de.root1.slicknx.karduino.KarduinoManagement;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.datapoint.Datapoint;
 import tuwien.auto.calimero.datapoint.StateDP;
-import tuwien.auto.calimero.dptxlator.DPT;
 import tuwien.auto.calimero.dptxlator.DPTXlator;
 import tuwien.auto.calimero.dptxlator.TranslatorTypes;
-import tuwien.auto.calimero.dptxlator.TranslatorTypes.MainType;
 import tuwien.auto.calimero.exception.KNXException;
 import tuwien.auto.calimero.exception.KNXFormatException;
 import tuwien.auto.calimero.exception.KNXRemoteException;
 import tuwien.auto.calimero.exception.KNXTimeoutException;
-import tuwien.auto.calimero.knxnetip.KNXnetIPTunnel;
 import tuwien.auto.calimero.link.KNXLinkClosedException;
 import tuwien.auto.calimero.link.KNXNetworkLinkIP;
 import tuwien.auto.calimero.link.medium.TPSettings;
 import tuwien.auto.calimero.process.ProcessCommunicationBase;
-import tuwien.auto.calimero.xml.KNXMLException;
-import tuwien.auto.calimero.xml.XMLWriter;
 
 /**
  *
@@ -82,6 +76,15 @@ public final class Knx {
 
             allTypes.put(TranslatorTypes.TYPE_8BIT_SIGNED, new TranslatorTypes.MainType(TranslatorTypes.TYPE_8BIT_SIGNED,
                     DPTXlator8BitSigned.class, desc));
+
+        }
+        
+        if (!allTypes.containsKey(TranslatorTypes.TYPE_ENUM8)) {
+
+            String desc = "8 Bit Enumeration (main type 20)";
+
+            allTypes.put(TranslatorTypes.TYPE_ENUM8, new TranslatorTypes.MainType(TranslatorTypes.TYPE_ENUM8,
+                    DPTXlator8BitEnumeration.class, desc));
 
         }
     }

@@ -18,6 +18,7 @@
  */
 package de.root1.slicknx;
 
+import de.root1.slicknx.dptxlator.DPTXlator8BitSigned;
 import java.util.Arrays;
 import java.util.Objects;
 import tuwien.auto.calimero.dptxlator.DPTXlator;
