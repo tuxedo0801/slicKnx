@@ -62,6 +62,7 @@ public class DPTXlator8BitEnumeration extends DPTXlator {
     public DPTXlator8BitEnumeration(final String dptID) throws KNXFormatException {
         super(1);
         setSubType(dptID);
+        setAppendUnit(false);
     }
 
     /* (non-Javadoc)
