@@ -517,7 +517,7 @@ public final class Knx {
     }
 
     /**
-     *
+     * @param isResponse is this a response to a previous read-request?
      * @param ga the groupaddress to write to
      * @param dpt DPT of the provided data and format to be sent. Format like
      * 1.001, without "DPT"-prefix
@@ -525,7 +525,7 @@ public final class Knx {
      * of the provided DPT
      * @throws KnxException
      */
-    public void write(String ga, String dpt, String value) throws KnxException {
+    public void write(boolean isResponse, String ga, String dpt, String value) throws KnxException {
         checkGa(ga);
         checkDpt(dpt);
 
@@ -565,8 +565,11 @@ public final class Knx {
             DPTXlator t = TranslatorTypes.createTranslator(mainDpt, mainDpt + "." + subDpt);
 
             t.setValue(value);
-
-            pc.write(new GroupAddress(ga), t);
+            if (isResponse) {
+                pc.writeResponse(new GroupAddress(ga), t);
+            } else {
+                pc.write(new GroupAddress(ga), t);
+            }
         } catch (KNXFormatException ex) {
             throw new KnxException("Value '" + value + "' cannot be translated to DPT " + dpt, ex);
         } catch (KNXException ex) {
