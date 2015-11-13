@@ -165,7 +165,7 @@ public final class Knx {
 
             // setup knx connection
 //            netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.TUNNELING, null, new InetSocketAddress(host, port), false, new TPSettings(false));
-            netlink = new KNXNetworkLinkIP(host.getHostName(), new TPSettings(false));
+            netlink = new KNXNetworkLinkIP(host.getHostName(), new TPSettings());
 
             pc = new SlicKnxProcessCommunicatorImpl(netlink);
             log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
@@ -176,7 +176,7 @@ public final class Knx {
     }
 
     /**
-     *
+     * Starts routing mode
      * @throws KnxException if connection to knx(router, ...) fails
      */
     public Knx() throws KnxException {
@@ -184,7 +184,7 @@ public final class Knx {
             this.hostadr = InetAddress.getByName("224.0.23.12");
 
             // setup knx connection
-            netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.ROUTING, null, new InetSocketAddress(hostadr, port), false, new TPSettings(false));
+            netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.ROUTING, null, new InetSocketAddress(hostadr, port), false, new TPSettings());
 
             pc = new SlicKnxProcessCommunicatorImpl(netlink);
             log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
