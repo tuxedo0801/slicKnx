@@ -145,7 +145,7 @@ public class SlicKnxProcessCommunicatorImpl implements ProcessCommunicator {
      */
     public SlicKnxProcessCommunicatorImpl(final KNXNetworkLink link) throws KNXLinkClosedException {
         if (!link.isOpen()) {
-            throw new KNXLinkClosedException();
+            throw new KNXLinkClosedException("Link is not open");
         }
         lnk = link;
         lnk.addLinkListener(lnkListener);

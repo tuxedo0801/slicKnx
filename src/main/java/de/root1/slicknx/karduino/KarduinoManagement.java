@@ -18,6 +18,7 @@ import tuwien.auto.calimero.exception.KNXInvalidResponseException;
 import tuwien.auto.calimero.exception.KNXRemoteException;
 import tuwien.auto.calimero.exception.KNXTimeoutException;
 import tuwien.auto.calimero.link.KNXLinkClosedException;
+import tuwien.auto.calimero.link.KNXNetworkLink;
 import tuwien.auto.calimero.link.KNXNetworkLinkIP;
 import tuwien.auto.calimero.mgmt.Destination;
 import tuwien.auto.calimero.mgmt.KNXDisconnectException;
@@ -34,7 +35,7 @@ public class KarduinoManagement {
 
     private final ManagementClientImpl mc;
     private Destination dest;
-    private final KNXNetworkLinkIP netlink;
+    private final KNXNetworkLink netlink;
     private final int RETRIES = 3;
     private long lastActivity = System.currentTimeMillis();
     private final long SEND_DELAY = 150;
@@ -46,7 +47,7 @@ public class KarduinoManagement {
      * @param netlink
      * @throws KNXLinkClosedException
      */
-    public KarduinoManagement(KNXNetworkLinkIP netlink) throws KNXLinkClosedException {
+    public KarduinoManagement(KNXNetworkLink netlink) throws KNXLinkClosedException {
         this.netlink = netlink;
         this.mc = new ManagementClientImpl(netlink);
 

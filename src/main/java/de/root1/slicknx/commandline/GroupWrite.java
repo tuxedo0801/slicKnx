@@ -16,7 +16,7 @@ public class GroupWrite {
     
     public static void main(String[] args) throws KnxException, InterruptedException {
         
-        args = new String[]{"1.1.128", "3/6/100", "03", "b1"};
+        args = new String[]{"1.1.128", "5/0/99", "00", "00", "00", "00"};
         
         if (args.length<3) {
             printHelp();

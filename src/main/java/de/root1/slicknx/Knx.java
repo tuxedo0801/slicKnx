@@ -40,7 +40,9 @@ import tuwien.auto.calimero.exception.KNXFormatException;
 import tuwien.auto.calimero.exception.KNXRemoteException;
 import tuwien.auto.calimero.exception.KNXTimeoutException;
 import tuwien.auto.calimero.link.KNXLinkClosedException;
+import tuwien.auto.calimero.link.KNXNetworkLink;
 import tuwien.auto.calimero.link.KNXNetworkLinkIP;
+import tuwien.auto.calimero.link.KNXNetworkLinkTpuart;
 import tuwien.auto.calimero.link.medium.TPSettings;
 import tuwien.auto.calimero.process.ProcessCommunicationBase;
 
@@ -52,7 +54,7 @@ public final class Knx {
 
     private static final Logger log = LoggerFactory.getLogger(Knx.class);
 
-    private KNXNetworkLinkIP netlink;
+    private KNXNetworkLink netlink;
     private int port = 3671;
     private InetAddress hostadr;
 
@@ -65,6 +67,7 @@ public final class Knx {
      */
     private SlicKnxProcessCommunicatorImpl pc;
     private String individualAddress = null;
+    public enum SerialType {TPUART, FT12, UNDEFINED};
 
     static {
 
@@ -86,6 +89,45 @@ public final class Knx {
             allTypes.put(TranslatorTypes.TYPE_ENUM8, new TranslatorTypes.MainType(TranslatorTypes.TYPE_ENUM8,
                     DPTXlator8BitEnumeration.class, desc));
 
+        }
+    }
+    /**
+     * Start KNX communication via serial connection
+     * @param type according to your serial connection type
+     * @param device device, like "/dev/ttyUSB0" or "COM10"
+     * @param individualAddress the individual address to use when sending to knx
+     * @throws KnxException in case of any problem
+     */
+    public Knx(SerialType type, String device, String individualAddress) throws KnxException {
+        this(type, device);
+        setIndividualAddress(individualAddress);
+    }
+    
+    /**
+     * Start KNX communication via serial connection
+     * @param type according to your serial connection type
+     * @param device device, like "/dev/ttyUSB0" or "COM10"
+     * @throws KnxException in case of any problem
+     */
+    public Knx(SerialType type, String device) throws KnxException {
+        try {
+            switch(type) {
+                case TPUART:
+                    netlink = new KNXNetworkLinkTpuart(device, new TPSettings(), new ArrayList());
+                    break;
+                case FT12:
+                case UNDEFINED:
+                    log.error("SerialType [{}] not yet supported", type);
+                    throw new KnxException("SerialType ["+type+"] not yet supported");
+            }
+            // setup knx connection
+//            netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.TUNNELING, null, new InetSocketAddress(host, port), false, new TPSettings(false));
+
+            pc = new SlicKnxProcessCommunicatorImpl(netlink);
+            log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
+            pc.addProcessListener(ggal);
+        } catch (KNXException ex) {
+            throw new KnxException("error creating serial link for type ["+type+"]", ex);
         }
     }
 
