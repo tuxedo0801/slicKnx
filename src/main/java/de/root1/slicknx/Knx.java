@@ -228,11 +228,7 @@ public final class Knx {
 //        return individualAddress != null;
 //    }
     public KarduinoManagement createKarduinoManagement() throws KnxException {
-        try {
-            return new KarduinoManagement(netlink);
-        } catch (KNXLinkClosedException ex) {
-            throw new KnxException("Link closed", ex);
-        }
+        return KarduinoManagement.createInstance(this);
     }
 
     /**
