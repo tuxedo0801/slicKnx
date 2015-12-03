@@ -45,7 +45,7 @@ public class ProgProtocol0x00 {
 
     private final Knx knx;
 
-    private static final int WAIT_TIMEOUT = 5000;
+    private static final int WAIT_TIMEOUT = 60000;
 
     private static final String PROG_GA = "15/7/255";
     private static final byte PROTOCOL_VERSION = 0x00;
@@ -152,6 +152,9 @@ public class ProgProtocol0x00 {
             if (returnOnFirstMsg && list != null) {
                 return list;
             }
+        }
+        if (list==null) {
+            list = new ArrayList<>();
         }
         return list;
     }
