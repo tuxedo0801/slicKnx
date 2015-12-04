@@ -62,8 +62,8 @@ public class KarduinoManagement {
         protocol = ProgProtocol0x00.getInstance(knx);
     }
     
-    public void writeIndividualAddress(String individualAddress) throws KnxException {
-        protocol.writeIndividualAddress(individualAddress);
+    public boolean writeIndividualAddress(String individualAddress) throws KnxException {
+        return protocol.writeIndividualAddress(individualAddress);
     }
     
     public List<String> readIndividualAddress(boolean oneAddressOnly) throws KnxException {
@@ -73,6 +73,10 @@ public class KarduinoManagement {
     /**
      * Starts programming existing device with given address
      * @param individualAddress 
+     * @param manufacturerId 
+     * @param deviceId 
+     * @param revisionId 
+     * @throws de.root1.slicknx.KnxException 
      */
     public void startProgramming(String individualAddress, byte manufacturerId, byte deviceId, byte revisionId) throws KnxException {
         if (isProgramming) {
@@ -88,11 +92,19 @@ public class KarduinoManagement {
         if (!cont) {
             throw new KnxException("It seems that more than one device is in programming-mode.");
         }
-        DeviceInfo readDeviceInfo = protocol.readDeviceInfo(individualAddress);
+        DeviceInfo di = protocol.readDeviceInfo(individualAddress);
         
         // check for correct device
-        if (readDeviceInfo.getManufacturerId()!=manufacturerId || readDeviceInfo.getDeviceId()!=deviceId || readDeviceInfo.getRevisionId()!=revisionId) {
-            throw new KnxException("Device does not match");
+        if (di.getManufacturerId()!=manufacturerId || di.getDeviceId()!=deviceId || di.getRevisionId()!=revisionId) {
+            throw new KnxException("Device does not match.\n"
+                + " KARDUINO reported: \n"
+                + "  manufacturer: "+di.getManufacturerId()+"\n"
+                + "  device: "+di.getDeviceId()+"\n"
+                + "  revision: "+di.getRevisionId()+"\n"
+                + " Configuration requires:\n"
+                + "  manufacturer: "+manufacturerId+"\n"
+                + "  device: "+deviceId+"\n"
+                + "  revision: "+revisionId);
         }
         this.individualAddress = individualAddress;
         isProgramming = true;

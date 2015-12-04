@@ -40,12 +40,16 @@ public class ProgProtocol0x00 {
     private static final Logger log = LoggerFactory.getLogger(ProgProtocol0x00.class);
 
     public static ProgProtocol0x00 getInstance(Knx knx) {
+        boolean debug = Boolean.getBoolean("de.root1.slicknx.karduino.debug");
+        if (debug) {
+            WAIT_TIMEOUT = 5000;
+        }
         return new ProgProtocol0x00(knx);
     }
 
     private final Knx knx;
 
-    private static final int WAIT_TIMEOUT = 60000;
+    private static int WAIT_TIMEOUT = 500; // produktiv: 500ms, debug: 5000ms
 
     private static final String PROG_GA = "15/7/255";
     private static final byte PROTOCOL_VERSION = 0x00;
@@ -135,6 +139,7 @@ public class ProgProtocol0x00 {
      * @return
      */
     private List<ProgMessage> waitForMessage(int timeout, boolean returnOnFirstMsg) {
+        log.info("Waiting for message. timeout={} returnOnFirst={}", timeout, returnOnFirstMsg);
         long start = System.currentTimeMillis();
         List<ProgMessage> list = null;
         while ((System.currentTimeMillis() - start) < timeout) {
@@ -175,13 +180,33 @@ public class ProgProtocol0x00 {
         byte[] data = new byte[14];
         data[0] = PROTOCOL_VERSION;
         data[1] = type;
-        for (int i = 0; i < data.length; i++) {
+        for (int i = 2; i < data.length; i++) {
             data[i] = 0x00;
         }
         return data;
     }
 
     private void sendMessage(byte[] msgData) throws KnxException {
+        log.info("Sending message \n"
+            + "ProtocolVersion: {}\n"
+            + "MsgTypeId      : {}\n"
+            + "data[2..13]    : {} {} {} {} {} {} {} {} {} {} {} {}", new Object[]{
+        String.format("%02x", msgData[0]),
+        String.format("%02x", msgData[1]),
+        String.format("%02x", msgData[2]),
+        String.format("%02x", msgData[3]),
+        String.format("%02x", msgData[4]),
+        String.format("%02x", msgData[5]),
+        String.format("%02x", msgData[6]),
+        String.format("%02x", msgData[7]),
+        String.format("%02x", msgData[8]),
+        String.format("%02x", msgData[9]),
+        String.format("%02x", msgData[10]),
+        String.format("%02x", msgData[11]),
+        String.format("%02x", msgData[12]),
+        String.format("%02x", msgData[13]),
+        
+        });
         knx.writeRaw(false, PROG_GA, msgData);
     }
 
@@ -195,7 +220,8 @@ public class ProgProtocol0x00 {
         sendMessage(msgData);
         List<ProgMessage> waitForMessage = waitForMessage(WAIT_TIMEOUT, false);
         int count = 0;
-        for (ProgMessage msg : waitForMessage) {
+        
+        for (ProgMessage msg : waitForMessage) {// FIXME check also for IA matching
             if (msg.getType() == MSGTYPE_ANSWER_PROGRAMMING_MODE) {
                 count++;
             }
@@ -215,7 +241,7 @@ public class ProgProtocol0x00 {
      * after receiving the first read response.
      *
      * @param oneAddressOnly
-     * @return lis of found addresses
+     * @return lis of found addresseskk
      * @throws KnxException
      */
     public List<String> readIndividualAddress(boolean oneAddressOnly) throws KnxException {
@@ -257,8 +283,9 @@ public class ProgProtocol0x00 {
         boolean exists = false;
 
         try {
-            DeviceInfo readDeviceInfo = readDeviceInfo(address);
+            readDeviceInfo(address);
             exists = true;
+            log.info("Device with {} exists",address);
         } catch (KnxException ex) {
 
         }
@@ -269,6 +296,7 @@ public class ProgProtocol0x00 {
 
         while (count != 1 && attempts-- > 0) {
             try {
+                // gibt nur Antwort von Geräten im ProgMode
                 List<String> list = readIndividualAddress(false);
                 count = list.size();
                 
@@ -276,7 +304,7 @@ public class ProgProtocol0x00 {
                 if (count ==1 && !list.get(0).equals(address)) {
                     setAddr = true;
                 } else if (count == 1 && list.get(0).equals(address)) {
-                    log.info("One ddevice responded, but already has {}.", address);
+                    log.info("One device responded, but already has {}.", address);
                 }
             } catch (KnxException ex) {
                 if (exists) {
@@ -287,7 +315,7 @@ public class ProgProtocol0x00 {
             log.info("KARDUINOs in programmning mode: {}", count);
         }
         if (!setAddr) {
-            log.warn("Will not set address. Too much devices in rog-mode or wring device in prog mode");
+            log.warn("Will not set address. Too much devices in prog-mode or wrong device in prog mode, or device to program has already same address");
             return false;
         }
         log.info("Writing address ...");
@@ -299,7 +327,7 @@ public class ProgProtocol0x00 {
 
         sendMessage(msgData);
         expectSingleMessage(MsgAck.class);
-        restart(address);
+//        restart(address);
         return true;
     }
 
@@ -315,7 +343,7 @@ public class ProgProtocol0x00 {
     }
 
     public byte[] readParameter(byte id) throws KnxException {
-        byte[] msgData = createNewMsg(MSGTYPE_WRITE_PARAMETER);
+        byte[] msgData = createNewMsg(MSGTYPE_READ_PARAMETER);
         msgData[2] = id;
         sendMessage(msgData);
         MsgParameter parameter = expectSingleMessage(MsgParameter.class);
@@ -347,13 +375,13 @@ public class ProgProtocol0x00 {
             System.arraycopy(Utils.getGroupAddress(co1.getGroupAddress()).toByteArray(), 0, msgData, 4, 2);
 
             if (co2 != null) {
-                msgData[6] = co1.getId();
-                System.arraycopy(Utils.getGroupAddress(co1.getGroupAddress()).toByteArray(), 0, msgData, 7, 2);
+                msgData[6] = co2.getId();
+                System.arraycopy(Utils.getGroupAddress(co2.getGroupAddress()).toByteArray(), 0, msgData, 7, 2);
             }
 
             if (co3 != null) {
-                msgData[9] = co1.getId();
-                System.arraycopy(Utils.getGroupAddress(co1.getGroupAddress()).toByteArray(), 0, msgData, 10, 2);
+                msgData[9] = co3.getId();
+                System.arraycopy(Utils.getGroupAddress(co3.getGroupAddress()).toByteArray(), 0, msgData, 10, 2);
             }
 
             sendMessage(msgData);
