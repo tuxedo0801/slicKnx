@@ -34,14 +34,28 @@ class MsgDeviceInfo extends ProgMessage {
         this.message = message;
     }
 
-    public byte getManufacturerId() {
-        return message[2];
+    /**
+     * Manufacturer-ID, 2 bytes value
+     * @return 
+     */
+    public short getManufacturerId() {
+        int hi = message[2];
+        int lo = message[3];
+        return (short) ((hi<<8) + (lo<<0));
     }
 
+    /**
+     * Device ID, 1 byte value
+     * @return 
+     */
     public byte getDeviceId() {
         return message[3];
     }
 
+    /**
+     * Device revision, 1 byte value
+     * @return 
+     */
     public byte getRevisionId() {
         return message[4];
     }

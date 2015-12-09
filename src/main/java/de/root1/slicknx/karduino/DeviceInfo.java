@@ -25,13 +25,13 @@ package de.root1.slicknx.karduino;
  */
 public class DeviceInfo {
 
-    private final byte manufacturerId;
+    private final short manufacturerId;
     private final byte deviceId;
     private final byte revisionId;
     private final byte deviceFlags;
     private final String individualAddress;
     
-    public DeviceInfo(byte manufacturerId, byte deviceId, byte revisionId, byte deviceFlags, String individualAddress) {
+    public DeviceInfo(short manufacturerId, byte deviceId, byte revisionId, byte deviceFlags, String individualAddress) {
         this.manufacturerId = manufacturerId;
         this.deviceId = deviceId;
         this.revisionId = revisionId;
@@ -39,7 +39,7 @@ public class DeviceInfo {
         this.individualAddress = individualAddress;
     }
     
-    public byte getManufacturerId() {
+    public short getManufacturerId() {
         return manufacturerId;
     }
     
