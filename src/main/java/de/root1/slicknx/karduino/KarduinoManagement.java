@@ -78,7 +78,7 @@ public class KarduinoManagement {
      * @param revisionId 
      * @throws de.root1.slicknx.KnxException 
      */
-    public void startProgramming(String individualAddress, byte manufacturerId, byte deviceId, byte revisionId) throws KnxException {
+    public void startProgramming(String individualAddress, short manufacturerId, byte deviceId, byte revisionId) throws KnxException {
         if (isProgramming) {
             throw new IllegalStateException("Already in programming mode. Please call stopProgramming() first.");
         }
