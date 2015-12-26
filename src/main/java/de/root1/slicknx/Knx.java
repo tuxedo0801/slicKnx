@@ -20,7 +20,7 @@ package de.root1.slicknx;
 
 import de.root1.slicknx.dptxlator.DPTXlator8BitEnumeration;
 import de.root1.slicknx.dptxlator.DPTXlator8BitSigned;
-import de.root1.slicknx.karduino.KarduinoManagement;
+import de.root1.slicknx.konnekting.KonnektingManagement;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -227,8 +227,8 @@ public final class Knx {
 //    public boolean hasIndividualAddress() {
 //        return individualAddress != null;
 //    }
-    public KarduinoManagement createKarduinoManagement() throws KnxException {
-        return KarduinoManagement.createInstance(this);
+    public KonnektingManagement createKarduinoManagement() throws KnxException {
+        return KonnektingManagement.createInstance(this);
     }
 
     /**

@@ -16,16 +16,19 @@
  *   You should have received a copy of the GNU General Public License
  *   along with slicKnx.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.root1.slicknx.karduino.protocol0x00;
+package de.root1.slicknx.konnekting;
+
+import de.root1.slicknx.KnxException;
 
 /**
  *
  * @author achristian
  */
-class MsgAck extends ProgMessage {
+class KonnektingManagementException extends KnxException {
 
-    public MsgAck(byte[] data) {
-        super(data);
+    KonnektingManagementException(String string) {
+        super(string);
     }
+
     
 }

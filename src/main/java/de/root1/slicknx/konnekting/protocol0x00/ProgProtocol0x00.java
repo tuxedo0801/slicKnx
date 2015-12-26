@@ -16,15 +16,15 @@
  *   You should have received a copy of the GNU General Public License
  *   along with slicKnx.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.root1.slicknx.karduino.protocol0x00;
+package de.root1.slicknx.konnekting.protocol0x00;
 
 import de.root1.slicknx.GroupAddressEvent;
 import de.root1.slicknx.GroupAddressListener;
 import de.root1.slicknx.Knx;
 import de.root1.slicknx.KnxException;
 import de.root1.slicknx.Utils;
-import de.root1.slicknx.karduino.ComObject;
-import de.root1.slicknx.karduino.DeviceInfo;
+import de.root1.slicknx.konnekting.ComObject;
+import de.root1.slicknx.konnekting.DeviceInfo;
 import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
@@ -40,9 +40,10 @@ public class ProgProtocol0x00 {
     private static final Logger log = LoggerFactory.getLogger(ProgProtocol0x00.class);
 
     public static ProgProtocol0x00 getInstance(Knx knx) {
-        boolean debug = Boolean.getBoolean("de.root1.slicknx.karduino.debug");
+        boolean debug = Boolean.getBoolean("de.root1.slicknx.konnekting.debug");
         if (debug) {
             WAIT_TIMEOUT = 5000;
+            log.info("###### RUNNING DEBUG MODE #######");
         }
         return new ProgProtocol0x00(knx);
     }
@@ -97,6 +98,41 @@ public class ProgProtocol0x00 {
                 byte[] data = event.getData();
                 ProgMessage msg = null;
                 byte type = data[1];
+                
+                log.trace("Received: \n"
+                        + "    data[0]={}\n"
+                        + "    data[1]={}\n"
+                        + "    data[2]={}\n"
+                        + "    data[3]={}\n"
+                        + "    data[4]={}\n"
+                        + "    data[5]={}\n"
+                        + "    data[6]={}\n"
+                        + "    data[7]={}\n"
+                        + "    data[8]={}\n"
+                        + "    data[9]={}\n"
+                        + "    data[10]={}\n"
+                        + "    data[11]={}\n"
+                        + "    data[12]={}\n"
+                        + "    data[13]={}\n",
+                        new Object[]{
+                        String.format("%8s", Integer.toBinaryString(data[0]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[1]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[2]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[3]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[4]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[5]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[6]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[7]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[8]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[9]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[10]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[11]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[12]&0xff)).replace(" ", "0"),
+                        String.format("%8s", Integer.toBinaryString(data[13]&0xff)).replace(" ", "0")
+                        }
+                        
+                );
+                
                 switch (type) {
                     case MSGTYPE_ACK:
                         msg = new MsgAck(data);
@@ -139,7 +175,7 @@ public class ProgProtocol0x00 {
      * @return
      */
     private List<ProgMessage> waitForMessage(int timeout, boolean returnOnFirstMsg) {
-        log.info("Waiting for message. timeout={} returnOnFirst={}", timeout, returnOnFirstMsg);
+        log.debug("Waiting for message. timeout={} returnOnFirst={}", timeout, returnOnFirstMsg);
         long start = System.currentTimeMillis();
         List<ProgMessage> list = null;
         while ((System.currentTimeMillis() - start) < timeout) {
@@ -165,10 +201,10 @@ public class ProgProtocol0x00 {
     }
 
     private <T extends ProgMessage> T expectSingleMessage(Class<T> msgClass) throws KnxException {
-        log.info("Waiting for single message [{}]", msgClass.getName());
+        log.debug("Waiting for single message [{}]", msgClass.getName());
         List<ProgMessage> list = waitForMessage(WAIT_TIMEOUT, true);
         if (list.size() != 1) {
-            throw new KnxException("Received " + list.size() + " messages. Expected 1. Aborting");
+            throw new KnxException("Received " + list.size() + " messages. Expected 1 of type "+msgClass.getName()+". Aborting");
         }
         if (!(list.get(0).getClass().isAssignableFrom(msgClass))) {
             throw new KnxException("Wrong message type received. Expected:" + msgClass + ". Got: " + list.get(0));
@@ -187,7 +223,7 @@ public class ProgProtocol0x00 {
     }
 
     private void sendMessage(byte[] msgData) throws KnxException {
-        log.info("Sending message \n"
+        log.trace("Sending message \n"
             + "ProtocolVersion: {}\n"
             + "MsgTypeId      : {}\n"
             + "data[2..13]    : {} {} {} {} {} {} {} {} {} {} {} {}", new Object[]{
@@ -230,9 +266,9 @@ public class ProgProtocol0x00 {
     }
 
     /**
-     * Reads the individual address of a karduino device
+     * Reads the individual address of a konnekting device
      * <p>
-     * The karduino device is a device in programming mode. In situations
+     * The konnekting device is a device in programming mode. In situations
      * necessary to know whether more than one device is in programming mode,
      * <code>oneAddressOnly</code> is set to <code>false</code> and the device
      * addresses are listed in the returned address array. In this case, the
@@ -268,6 +304,7 @@ public class ProgProtocol0x00 {
         System.arraycopy(Utils.getIndividualAddress(individualAddress).toByteArray(), 0, msgData, 2, 2);
         sendMessage(msgData);
         MsgDeviceInfo msg = expectSingleMessage(MsgDeviceInfo.class);
+        
         return new DeviceInfo(msg.getManufacturerId(), msg.getDeviceId(), msg.getRevisionId(), msg.getDeviceFlags(), msg.getIndividualAddress());
     }
 
@@ -285,7 +322,7 @@ public class ProgProtocol0x00 {
         try {
             readDeviceInfo(address);
             exists = true;
-            log.info("Device with {} exists",address);
+            log.debug("Device with {} exists",address);
         } catch (KnxException ex) {
 
         }
@@ -304,7 +341,7 @@ public class ProgProtocol0x00 {
                 if (count ==1 && !list.get(0).equals(address)) {
                     setAddr = true;
                 } else if (count == 1 && list.get(0).equals(address)) {
-                    log.info("One device responded, but already has {}.", address);
+                    log.debug("One device responded, but already has {}.", address);
                 }
             } catch (KnxException ex) {
                 if (exists) {
@@ -312,13 +349,13 @@ public class ProgProtocol0x00 {
                     return false;
                 }
             }
-            log.info("KARDUINOs in programmning mode: {}", count);
+            log.debug("KONNEKTINGs in programming mode: {}", count);
         }
         if (!setAddr) {
             log.warn("Will not set address. Too much devices in prog-mode or wrong device in prog mode, or device to program has already same address");
             return false;
         }
-        log.info("Writing address ...");
+        log.debug("Writing address ...");
         byte[] msgData = createNewMsg(MSGTYPE_WRITE_INDIVIDUAL_ADDRESS);
 
         // insert address
@@ -444,7 +481,7 @@ public class ProgProtocol0x00 {
         byte[] msgData = createNewMsg(MSGTYPE_RESTART);
         System.arraycopy(Utils.getIndividualAddress(individualAddress).toByteArray(), 0, msgData, 2, 2);
         sendMessage(msgData);
-        expectSingleMessage(MsgAck.class);
+//        expectSingleMessage(MsgAck.class);
     }
 
 }

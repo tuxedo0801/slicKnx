@@ -16,24 +16,25 @@
  *   You should have received a copy of the GNU General Public License
  *   along with slicKnx.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.root1.slicknx.karduino.protocol0x00;
+package de.root1.slicknx.konnekting.protocol0x00;
+
+import de.root1.slicknx.KnxException;
+import de.root1.slicknx.Utils;
 
 /**
  *
  * @author achristian
  */
-class MsgParameter extends ProgMessage {
+class MsgProgrammingMode extends ProgMessage {
     private final byte[] data;
 
-    public MsgParameter(byte[] data) {
+    public MsgProgrammingMode(byte[] data) {
         super(data);
         this.data = data;
     }
-
-    byte[] getParamValue() {
-        byte[] value = new byte[11];
-        System.arraycopy(data, 3, value, 0, 11);
-        return value;
+    
+    public String getAddress() throws KnxException {
+        return Utils.getIndividualAddress(data[2], data[3]).toString();
     }
     
 }

@@ -16,7 +16,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with slicKnx.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.root1.slicknx.karduino;
+package de.root1.slicknx.konnekting;
 
 
 /**
@@ -25,13 +25,13 @@ package de.root1.slicknx.karduino;
  */
 public class DeviceInfo {
 
-    private final short manufacturerId;
-    private final byte deviceId;
-    private final byte revisionId;
+    private final int manufacturerId;
+    private final short deviceId;
+    private final short revisionId;
     private final byte deviceFlags;
     private final String individualAddress;
     
-    public DeviceInfo(short manufacturerId, byte deviceId, byte revisionId, byte deviceFlags, String individualAddress) {
+    public DeviceInfo(int manufacturerId, short deviceId, short revisionId, byte deviceFlags, String individualAddress) {
         this.manufacturerId = manufacturerId;
         this.deviceId = deviceId;
         this.revisionId = revisionId;
@@ -39,15 +39,15 @@ public class DeviceInfo {
         this.individualAddress = individualAddress;
     }
     
-    public short getManufacturerId() {
+    public int getManufacturerId() {
         return manufacturerId;
     }
     
-    public byte getRevisionId() {
+    public short getRevisionId() {
         return revisionId;
     }
     
-    public byte getDeviceId() {
+    public short getDeviceId() {
         return deviceId;
     }
     
@@ -58,5 +58,12 @@ public class DeviceInfo {
     public String getIndividualAddress() {
         return individualAddress;
     }
+
+    @Override
+    public String toString() {
+        return "DeviceInfo{" + "manufacturerId=" + manufacturerId + ", deviceId=" + deviceId + ", revisionId=" + revisionId + ", deviceFlags=" + Integer.toBinaryString(deviceFlags) + ", individualAddress=" + individualAddress + '}';
+    }
+    
+    
     
 }

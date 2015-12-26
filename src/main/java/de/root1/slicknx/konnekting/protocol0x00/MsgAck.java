@@ -16,25 +16,16 @@
  *   You should have received a copy of the GNU General Public License
  *   along with slicKnx.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.root1.slicknx.karduino.protocol0x00;
-
-import de.root1.slicknx.KnxException;
-import de.root1.slicknx.Utils;
+package de.root1.slicknx.konnekting.protocol0x00;
 
 /**
  *
  * @author achristian
  */
-class MsgIndividualAddress extends ProgMessage {
-    private final byte[] data;
+class MsgAck extends ProgMessage {
 
-    public MsgIndividualAddress(byte[] data) {
+    public MsgAck(byte[] data) {
         super(data);
-        this.data = data;
-    }
-    
-    public String getAddress() throws KnxException {
-        return Utils.getIndividualAddress(data[2], data[3]).toString();
     }
     
 }

@@ -16,41 +16,25 @@
  *   You should have received a copy of the GNU General Public License
  *   along with slicKnx.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.root1.slicknx.karduino.protocol0x00;
+package de.root1.slicknx.konnekting.protocol0x00;
 
 import de.root1.slicknx.KnxException;
 import de.root1.slicknx.Utils;
-import de.root1.slicknx.karduino.ComObject;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
  * @author achristian
  */
-class MsgComObject extends ProgMessage {
+class MsgIndividualAddress extends ProgMessage {
     private final byte[] data;
 
-    public MsgComObject(byte[] data) {
+    public MsgIndividualAddress(byte[] data) {
         super(data);
         this.data = data;
     }
     
-    public List<ComObject> getComObjects() throws KnxException {
-        List<ComObject> list = new ArrayList<>();
-        
-        byte number = data[2];
-        switch(number) {
-            case 3:
-                list.add(new ComObject(data[9], Utils.getGroupAddress(data[10], data[11]).toString()));
-            case 2:
-                list.add(new ComObject(data[6], Utils.getGroupAddress(data[7], data[8]).toString()));
-            case 1:
-                list.add(new ComObject(data[3], Utils.getGroupAddress(data[4], data[5]).toString()));
-                break;
-        }
-        
-        return list;
+    public String getAddress() throws KnxException {
+        return Utils.getIndividualAddress(data[2], data[3]).toString();
     }
     
 }

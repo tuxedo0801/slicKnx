@@ -16,7 +16,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with slicKnx.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.root1.slicknx.karduino.protocol0x00;
+package de.root1.slicknx.konnekting.protocol0x00;
 
 import de.root1.slicknx.KnxException;
 import de.root1.slicknx.Utils;
@@ -35,38 +35,40 @@ class MsgDeviceInfo extends ProgMessage {
     }
 
     /**
-     * Manufacturer-ID, 2 bytes value
+     * Manufacturer-ID, 2 bytes value, unsigned
      * @return 
      */
-    public short getManufacturerId() {
-        int hi = message[2];
-        int lo = message[3];
-        return (short) ((hi<<8) + (lo<<0));
+    public int getManufacturerId() {
+        byte hi = message[2];
+        byte lo = message[3];
+        
+        return ((hi << 8)&0xffff) + ((lo << 0)&0xff);
     }
 
     /**
      * Device ID, 1 byte value
      * @return 
      */
-    public byte getDeviceId() {
-        return message[3];
+    public short getDeviceId() {
+        return (short) (message[4]&0xff);
     }
 
     /**
      * Device revision, 1 byte value
      * @return 
      */
-    public byte getRevisionId() {
-        return message[4];
+    public short getRevisionId() {
+        return (short) (message[5]&0xff);
     }
 
     public byte getDeviceFlags() {
-        return message[5];
+        return message[6];
     }
 
     public String getIndividualAddress() throws KnxException {
-        return Utils.getIndividualAddress(message[6], message[7]).toString();
+        return Utils.getIndividualAddress(message[7], message[8]).toString();
     }
+    
     
     
     
