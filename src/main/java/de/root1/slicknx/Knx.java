@@ -636,7 +636,7 @@ public final class Knx {
             throw new KnxException("Error reading DPT" + dpt + " from " + ga, ex);
         }
     }
-
+    
     /**
      * Add a listener for the specified group address.
      *

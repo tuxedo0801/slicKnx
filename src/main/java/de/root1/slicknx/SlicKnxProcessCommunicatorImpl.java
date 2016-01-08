@@ -206,7 +206,7 @@ public class SlicKnxProcessCommunicatorImpl implements ProcessCommunicator {
     public void removeProcessListener(final ProcessListener l) {
         listeners.remove(l);
     }
-
+    
     /* (non-Javadoc)
      * @see tuwien.auto.calimero.process.ProcessCommunicator#readBool
      * (tuwien.auto.calimero.GroupAddress)
