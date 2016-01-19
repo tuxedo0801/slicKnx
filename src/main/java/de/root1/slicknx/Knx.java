@@ -227,7 +227,7 @@ public final class Knx {
 //    public boolean hasIndividualAddress() {
 //        return individualAddress != null;
 //    }
-    public KonnektingManagement createKarduinoManagement() throws KnxException {
+    public KonnektingManagement createKarduinoManagement() {
         return KonnektingManagement.createInstance(this);
     }
 

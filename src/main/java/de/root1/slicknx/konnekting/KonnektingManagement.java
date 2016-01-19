@@ -62,6 +62,9 @@ public class KonnektingManagement {
         protocol = ProgProtocol0x00.getInstance(knx);
     }
     
+    /**
+     * Write individual address to device. Requires prog-button to be pressed. Returns false if failed.
+     */
     public boolean writeIndividualAddress(String individualAddress) throws KnxException {
         return protocol.writeIndividualAddress(individualAddress);
     }
