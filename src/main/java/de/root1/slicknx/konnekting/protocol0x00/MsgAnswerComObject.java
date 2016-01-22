@@ -20,21 +20,37 @@ package de.root1.slicknx.konnekting.protocol0x00;
 
 import de.root1.slicknx.KnxException;
 import de.root1.slicknx.Utils;
+import de.root1.slicknx.konnekting.ComObject;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author achristian
  */
-class MsgProgrammingMode extends ProgMessage {
+class MsgAnswerComObject extends ProgMessage {
     private final byte[] data;
 
-    public MsgProgrammingMode(byte[] data) {
+    public MsgAnswerComObject(byte[] data) {
         super(data);
         this.data = data;
     }
     
-    public String getAddress() throws KnxException {
-        return Utils.getIndividualAddress(data[2], data[3]).toString();
+    public List<ComObject> getComObjects() throws KnxException {
+        List<ComObject> list = new ArrayList<>();
+        
+        byte number = data[2];
+        switch(number) {
+            case 3:
+                list.add(new ComObject(data[9], Utils.getGroupAddress(data[10], data[11]).toString()));
+            case 2:
+                list.add(new ComObject(data[6], Utils.getGroupAddress(data[7], data[8]).toString()));
+            case 1:
+                list.add(new ComObject(data[3], Utils.getGroupAddress(data[4], data[5]).toString()));
+                break;
+        }
+        
+        return list;
     }
     
 }

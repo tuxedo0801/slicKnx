@@ -22,10 +22,10 @@ package de.root1.slicknx.konnekting.protocol0x00;
  *
  * @author achristian
  */
-class MsgParameter extends ProgMessage {
+class MsgAnswerParameter extends ProgMessage {
     private final byte[] data;
 
-    public MsgParameter(byte[] data) {
+    public MsgAnswerParameter(byte[] data) {
         super(data);
         this.data = data;
     }

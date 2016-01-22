@@ -18,16 +18,22 @@
  */
 package de.root1.slicknx.konnekting.protocol0x00;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  *
  * @author achristian
  */
 abstract class ProgMessage {
     
-    private byte protocolversion;
-    private byte msgType;
+    protected Logger log = LoggerFactory.getLogger(ProgMessage.class);
+    private final byte protocolversion;
+    private final byte msgType;
+    protected final byte[] data;
 
     public ProgMessage(byte[] message) {
+        this.data = message;
         protocolversion = message[0];
         msgType = message[1];
     }

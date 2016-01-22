@@ -27,5 +27,12 @@ class MsgAck extends ProgMessage {
     public MsgAck(byte[] data) {
         super(data);
     }
+
+    @Override
+    public String toString() {
+        return "ACK{}";
+    }
+    
+    
     
 }

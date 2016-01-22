@@ -61,83 +61,93 @@ public class KonnektingManagement {
         this.knx = knx;
         protocol = ProgProtocol0x00.getInstance(knx);
     }
-    
+
     /**
-     * Write individual address to device. Requires prog-button to be pressed. Returns false if failed.
+     * Write individual address to device. Requires prog-button to be pressed.
+     * Returns false if failed.
+     * @param individualAddress
+     * @throws de.root1.slicknx.KnxException
      */
-    public boolean writeIndividualAddress(String individualAddress) throws KnxException {
-        return protocol.writeIndividualAddress(individualAddress);
+    public void writeIndividualAddress(String individualAddress) throws KnxException {
+        protocol.writeIndividualAddress(individualAddress);
     }
-    
+
     public List<String> readIndividualAddress(boolean oneAddressOnly) throws KnxException {
         return protocol.readIndividualAddress(oneAddressOnly);
     }
 
     /**
      * Starts programming existing device with given address
-     * @param individualAddress 
-     * @param manufacturerId 
-     * @param deviceId 
-     * @param revisionId 
-     * @throws de.root1.slicknx.KnxException 
+     *
+     * @param individualAddress
+     * @param manufacturerId
+     * @param deviceId
+     * @param revisionId
+     * @throws de.root1.slicknx.KnxException
      */
     public void startProgramming(String individualAddress, int manufacturerId, short deviceId, short revisionId) throws KnxException {
         if (isProgramming) {
             throw new IllegalStateException("Already in programming mode. Please call stopProgramming() first.");
         }
-        
+
         // set prog mode based on pa
         log.debug("Set programming mode = true");
         protocol.writeProgrammingMode(individualAddress, true);
-        
+
         log.debug("Checking for devices in prog mode");
         // check for single device in prog mode (uses ReadProgMode)
         boolean cont = protocol.onlyOneDeviceInProgMode();
-        
+
         if (!cont) {
             throw new KnxException("It seems that no or more than one device is in programming-mode.");
         }
-        
+
         log.debug("Reading device info ...");
-        
+
         DeviceInfo di = protocol.readDeviceInfo(individualAddress);
-        
+
         // check for correct device
-        if (di.getManufacturerId()!=manufacturerId || di.getDeviceId()!=deviceId || di.getRevisionId()!=revisionId) {
+        if (di.getManufacturerId() != manufacturerId || di.getDeviceId() != deviceId || di.getRevisionId() != revisionId) {
             throw new KnxException("Device does not match.\n"
                 + " KONNEKTING reported: \n"
-                + "  manufacturer: "+di.getManufacturerId()+"\n"
-                + "  device: "+di.getDeviceId()+"\n"
-                + "  revision: "+di.getRevisionId()+"\n"
+                + "  manufacturer: " + di.getManufacturerId() + "\n"
+                + "  device: " + di.getDeviceId() + "\n"
+                + "  revision: " + di.getRevisionId() + "\n"
                 + " Configuration requires:\n"
-                + "  manufacturer: "+manufacturerId+"\n"
-                + "  device: "+deviceId+"\n"
-                + "  revision: "+revisionId);
+                + "  manufacturer: " + manufacturerId + "\n"
+                + "  device: " + deviceId + "\n"
+                + "  revision: " + revisionId);
         }
         log.debug("Got device info: {}", di);
         this.individualAddress = individualAddress;
         isProgramming = true;
     }
-    
+
     public void stopProgramming() throws KnxException {
-        if (!isProgramming) throw new IllegalStateException("Not in programming-state- Call startProgramming() first.");
+        if (!isProgramming) {
+            throw new IllegalStateException("Not in programming-state- Call startProgramming() first.");
+        }
         protocol.writeProgrammingMode(individualAddress, false);
         protocol.restart(individualAddress);
         isProgramming = false;
     }
-    
+
     public void writeParameter(short id, byte[] data) throws KnxException {
-        if (!isProgramming) throw new IllegalStateException("Not in programming-state- Call startProgramming() first.");
+        if (!isProgramming) {
+            throw new IllegalStateException("Not in programming-state- Call startProgramming() first.");
+        }
         log.debug("Writing parameter #{}", id);
-        protocol.writeParameter((byte)id, data);
+        protocol.writeParameter((byte) id, data);
     }
-    
+
     public void writeComObject(List<ComObject> list) throws KnxException {
-        if (!isProgramming) throw new IllegalStateException("Not in programming-state- Call startProgramming() first.");
+        if (!isProgramming) {
+            throw new IllegalStateException("Not in programming-state- Call startProgramming() first.");
+        }
         log.debug("Writing {} ComObjects #", list.size());
         protocol.writeComObject(list);
     }
-    
+
     public void restart(String address) throws KnxException {
         protocol.restart(address);
     }

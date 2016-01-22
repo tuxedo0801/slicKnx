@@ -25,16 +25,28 @@ import de.root1.slicknx.Utils;
  *
  * @author achristian
  */
-class MsgIndividualAddress extends ProgMessage {
+class MsgAnswerProgrammingMode extends ProgMessage {
     private final byte[] data;
 
-    public MsgIndividualAddress(byte[] data) {
+    public MsgAnswerProgrammingMode(byte[] data) {
         super(data);
         this.data = data;
     }
     
     public String getAddress() throws KnxException {
         return Utils.getIndividualAddress(data[2], data[3]).toString();
+    }
+    
+    @Override
+    public String toString() {
+        String t;
+        try {
+            t = "AnswerProgrammingMode{"+getAddress()+"}";
+        } catch (KnxException ex) {
+            t = "AnswerProgrammingMode{!!!EXCEPTION!!!}";
+            log.error("Error parsing individual address ", ex);
+        }
+        return t;
     }
     
 }

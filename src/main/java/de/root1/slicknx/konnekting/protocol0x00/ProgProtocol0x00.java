@@ -52,29 +52,29 @@ public class ProgProtocol0x00 {
 
     private static int WAIT_TIMEOUT = 500; // produktiv: 500ms, debug: 5000ms
 
-    private static final String PROG_GA = "15/7/255";
-    private static final byte PROTOCOL_VERSION = 0x00;
+    public static final String PROG_GA = "15/7/255";
+    public static final byte PROTOCOL_VERSION = 0x00;
 
-    private static final byte MSGTYPE_ACK = 0;
-    private static final byte MSGTYPE_READ_DEVICE_INFO = 1;
-    private static final byte MSGTYPE_ANSWER_DEVICE_INFO = 2;
-    private static final byte MSGTYPE_RESTART = 9;
+    public static final byte MSGTYPE_ACK = 0;
+    public static final byte MSGTYPE_READ_DEVICE_INFO = 1;
+    public static final byte MSGTYPE_ANSWER_DEVICE_INFO = 2;
+    public static final byte MSGTYPE_RESTART = 9;
 
-    private static final byte MSGTYPE_WRITE_PROGRAMMING_MODE = 10;
-    private static final byte MSGTYPE_READ_PROGRAMMING_MODE = 11;
-    private static final byte MSGTYPE_ANSWER_PROGRAMMING_MODE = 12;
+    public static final byte MSGTYPE_WRITE_PROGRAMMING_MODE = 10;
+    public static final byte MSGTYPE_READ_PROGRAMMING_MODE = 11;
+    public static final byte MSGTYPE_ANSWER_PROGRAMMING_MODE = 12;
 
-    private static final byte MSGTYPE_WRITE_INDIVIDUAL_ADDRESS = 20;
-    private static final byte MSGTYPE_READ_INDIVIDUAL_ADDRESS = 21;
-    private static final byte MSGTYPE_ANSWER_INDIVIDUAL_ADDRESS = 22;
+    public static final byte MSGTYPE_WRITE_INDIVIDUAL_ADDRESS = 20;
+    public static final byte MSGTYPE_READ_INDIVIDUAL_ADDRESS = 21;
+    public static final byte MSGTYPE_ANSWER_INDIVIDUAL_ADDRESS = 22;
 
-    private static final byte MSGTYPE_WRITE_PARAMETER = 30;
-    private static final byte MSGTYPE_READ_PARAMETER = 31;
-    private static final byte MSGTYPE_ANSWER_PARAMETER = 32;
+    public static final byte MSGTYPE_WRITE_PARAMETER = 30;
+    public static final byte MSGTYPE_READ_PARAMETER = 31;
+    public static final byte MSGTYPE_ANSWER_PARAMETER = 32;
 
-    private static final byte MSGTYPE_WRITE_COM_OBJECT = 40;
-    private static final byte MSGTYPE_READ_COM_OBJECT = 41;
-    private static final byte MSGTYPE_ANSWER_COM_OBJECT = 42;
+    public static final byte MSGTYPE_WRITE_COM_OBJECT = 40;
+    public static final byte MSGTYPE_READ_COM_OBJECT = 41;
+    public static final byte MSGTYPE_ANSWER_COM_OBJECT = 42;
 
     private static final List<ProgMessage> receivedMessages = new ArrayList<>();
 
@@ -138,19 +138,19 @@ public class ProgProtocol0x00 {
                         msg = new MsgAck(data);
                         break;
                     case MSGTYPE_ANSWER_DEVICE_INFO:
-                        msg = new MsgDeviceInfo(data);
+                        msg = new MsgAnswerDeviceInfo(data);
                         break;
                     case MSGTYPE_ANSWER_INDIVIDUAL_ADDRESS:
-                        msg = new MsgIndividualAddress(data);
+                        msg = new MsgAnswerIndividualAddress(data);
                         break;
                     case MSGTYPE_ANSWER_PROGRAMMING_MODE:
-                        msg = new MsgProgrammingMode(data);
+                        msg = new MsgAnswerProgrammingMode(data);
                         break;
                     case MSGTYPE_ANSWER_PARAMETER:
-                        msg = new MsgParameter(data);
+                        msg = new MsgAnswerParameter(data);
                         break;
                     case MSGTYPE_ANSWER_COM_OBJECT:
-                        msg = new MsgComObject(data);
+                        msg = new MsgAnswerComObject(data);
                         break;
                 }
                 synchronized (receivedMessages) {
@@ -285,13 +285,13 @@ public class ProgProtocol0x00 {
         byte[] msgData = createNewMsg(MSGTYPE_READ_INDIVIDUAL_ADDRESS);
         sendMessage(msgData);
         if (oneAddressOnly) {
-            MsgIndividualAddress expectSingleMessage = expectSingleMessage(MsgIndividualAddress.class);
+            MsgAnswerIndividualAddress expectSingleMessage = expectSingleMessage(MsgAnswerIndividualAddress.class);
             list.add(expectSingleMessage.getAddress());
         } else {
             List<ProgMessage> msgList = waitForMessage(WAIT_TIMEOUT, false);
             for (ProgMessage msg : msgList) {
-                if (msg instanceof MsgIndividualAddress) {
-                    MsgIndividualAddress ia = (MsgIndividualAddress) msg;
+                if (msg instanceof MsgAnswerIndividualAddress) {
+                    MsgAnswerIndividualAddress ia = (MsgAnswerIndividualAddress) msg;
                     list.add(ia.getAddress());
                 }
             }
@@ -303,7 +303,7 @@ public class ProgProtocol0x00 {
         byte[] msgData = createNewMsg(MSGTYPE_READ_DEVICE_INFO);
         System.arraycopy(Utils.getIndividualAddress(individualAddress).toByteArray(), 0, msgData, 2, 2);
         sendMessage(msgData);
-        MsgDeviceInfo msg = expectSingleMessage(MsgDeviceInfo.class);
+        MsgAnswerDeviceInfo msg = expectSingleMessage(MsgAnswerDeviceInfo.class);
         
         return new DeviceInfo(msg.getManufacturerId(), msg.getDeviceId(), msg.getRevisionId(), msg.getDeviceFlags(), msg.getIndividualAddress());
     }
@@ -316,7 +316,7 @@ public class ProgProtocol0x00 {
      * @throws KnxException if f.i. a timeout occurs or more than one device is
      * in programming mode
      */
-    public boolean writeIndividualAddress(String address) throws KnxException {
+    public void writeIndividualAddress(String address) throws KnxException {
         boolean exists = false;
 
         try {
@@ -346,14 +346,14 @@ public class ProgProtocol0x00 {
             } catch (KnxException ex) {
                 if (exists) {
                     log.warn("device exists but is not in programming mode, cancel writing address");
-                    return false;
+                    throw new KnxException("device exists but is not in programming mode, cancel writing address");
                 }
             }
             log.debug("KONNEKTINGs in programming mode: {}", count);
         }
         if (!setAddr) {
             log.warn("Will not set address. Too much devices in prog-mode or wrong device in prog mode, or device to program has already same address");
-            return false;
+            throw new KnxException("Will not set address. Too much devices in prog-mode or wrong device in prog mode, or device to program has already same address");
         }
         log.debug("Writing address ...");
         byte[] msgData = createNewMsg(MSGTYPE_WRITE_INDIVIDUAL_ADDRESS);
@@ -364,8 +364,6 @@ public class ProgProtocol0x00 {
 
         sendMessage(msgData);
         expectSingleMessage(MsgAck.class);
-//        restart(address);
-        return true;
     }
 
     public void writeParameter(byte id, byte[] data) throws KnxException {
@@ -383,7 +381,7 @@ public class ProgProtocol0x00 {
         byte[] msgData = createNewMsg(MSGTYPE_READ_PARAMETER);
         msgData[2] = id;
         sendMessage(msgData);
-        MsgParameter parameter = expectSingleMessage(MsgParameter.class);
+        MsgAnswerParameter parameter = expectSingleMessage(MsgAnswerParameter.class);
         return parameter.getParamValue();
     }
 
@@ -462,7 +460,7 @@ public class ProgProtocol0x00 {
             }
 
             sendMessage(msgData);
-            MsgComObject comObj = expectSingleMessage(MsgComObject.class);
+            MsgAnswerComObject comObj = expectSingleMessage(MsgAnswerComObject.class);
             list.addAll(comObj.getComObjects());
 
         }

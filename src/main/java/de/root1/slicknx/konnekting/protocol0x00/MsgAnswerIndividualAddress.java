@@ -25,51 +25,26 @@ import de.root1.slicknx.Utils;
  *
  * @author achristian
  */
-class MsgDeviceInfo extends ProgMessage {
+class MsgAnswerIndividualAddress extends ProgMessage {
 
-    private final byte[] message;
-    
-    public MsgDeviceInfo(byte[] message) {
-        super(message);
-        this.message = message;
-    }
-
-    /**
-     * Manufacturer-ID, 2 bytes value, unsigned
-     * @return 
-     */
-    public int getManufacturerId() {
-        byte hi = message[2];
-        byte lo = message[3];
-        
-        return ((hi << 8)&0xffff) + ((lo << 0)&0xff);
-    }
-
-    /**
-     * Device ID, 1 byte value
-     * @return 
-     */
-    public short getDeviceId() {
-        return (short) (message[4]&0xff);
-    }
-
-    /**
-     * Device revision, 1 byte value
-     * @return 
-     */
-    public short getRevisionId() {
-        return (short) (message[5]&0xff);
-    }
-
-    public byte getDeviceFlags() {
-        return message[6];
-    }
-
-    public String getIndividualAddress() throws KnxException {
-        return Utils.getIndividualAddress(message[7], message[8]).toString();
+    public MsgAnswerIndividualAddress(byte[] data) {
+        super(data);
     }
     
+    public String getAddress() throws KnxException {
+        return Utils.getIndividualAddress(data[2], data[3]).toString();
+    }
     
-    
+    @Override
+    public String toString() {
+        String t;
+        try {
+            t = "AnswerIndividualAddress{"+getAddress()+"}";
+        } catch (KnxException ex) {
+            t = "AnswerIndividualAddress{!!!EXCEPTION!!!}";
+            log.error("Error parsing individual address ", ex);
+        }
+        return t;
+    }
     
 }
