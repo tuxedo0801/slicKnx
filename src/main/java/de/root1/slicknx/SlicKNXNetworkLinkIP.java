@@ -47,14 +47,23 @@ public class SlicKNXNetworkLinkIP extends KNXNetworkLinkIP {
             Field connField = KNXNetworkLinkIP.class.getDeclaredField("conn");
             connField.setAccessible(true);
             
-            KNXnetIPConnection conn = (KNXnetIPConnection) connField.get(this);
+//            KNXnetIPConnection conn = (KNXnetIPConnection) connField.get(this);
+            KNXnetIPRouting conn = (KNXnetIPRouting) connField.get(this);
             
             if (conn instanceof KNXnetIPRouting) {
                 KNXnetIPRouting knxnetiprouting = (KNXnetIPRouting) conn;
+                
                 Field socketField = KNXnetIPRouting.class.getSuperclass().getDeclaredField("socket");
                 socketField.setAccessible(true);
                 MulticastSocket socket = (MulticastSocket) socketField.get(knxnetiprouting);
                 socket.setLoopbackMode(!flag); // weird inverse logic, see javadoc of MulticastSocket#setLoopbackMode
+                
+                Field loopbackEnabledField = KNXnetIPRouting.class.getDeclaredField("loopbackEnabled");
+                loopbackEnabledField.setAccessible(true);
+                loopbackEnabledField.set(knxnetiprouting, !socket.getLoopbackMode());
+                Boolean loopbackEnabled = (Boolean) loopbackEnabledField.get(knxnetiprouting);
+                logger.info("multicast loopback mode " + (loopbackEnabled ? "enabled" : "disabled"));
+                
             }
                     
         } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException | SocketException ex) {

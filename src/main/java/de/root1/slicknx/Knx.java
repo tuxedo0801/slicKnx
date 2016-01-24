@@ -193,6 +193,17 @@ public final class Knx {
             throw new KnxException("Error connecting to KNX: " + ex.getMessage(), ex);
         }
     }
+    
+    public void setLoopbackMode(boolean loopback) {
+        
+        if (netlink instanceof SlicKNXNetworkLinkIP) {
+            SlicKNXNetworkLinkIP nl = (SlicKNXNetworkLinkIP) netlink;
+            nl.setLoopbackMode(loopback);
+        } else {
+            log.info("network link instance has no explicit loopback mode");
+        }
+        
+    }
 
     /**
      * sets the own physical, individual address. f.i. "1.1.123"
