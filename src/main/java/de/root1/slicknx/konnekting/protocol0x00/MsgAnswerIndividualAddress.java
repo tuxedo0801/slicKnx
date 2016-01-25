@@ -39,7 +39,7 @@ class MsgAnswerIndividualAddress extends ProgMessage {
     public String toString() {
         String t;
         try {
-            t = "AnswerIndividualAddress{"+getAddress()+"}";
+            t = "AnswerIndividualAddress{individualAddress="+getAddress()+"}";
         } catch (KnxException ex) {
             t = "AnswerIndividualAddress{!!!EXCEPTION!!!}";
             log.error("Error parsing individual address ", ex);
