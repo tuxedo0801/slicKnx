@@ -59,15 +59,15 @@ class MsgWriteComObject extends ProgMessage {
                 + "len=" + data[2]+", "
                 
                 + "id1=" + String.format("0x%02x", data[3]) + ", "
-                + "ga1=" + Utils.getIndividualAddress(data[4], data[5]) + ", "
+                + "ga1=" + Utils.getGroupAddress(data[4], data[5]) + ", "
                 
                 + (len>=2?
                 "id2=" + String.format("0x%02x", data[6]) + ", "
-                + "ga2=" + Utils.getIndividualAddress(data[7], data[8]) + ", "
+                + "ga2=" + Utils.getGroupAddress(data[7], data[8]) + ", "
                 
                 + (len==3?
                 "id3=" + String.format("0x%02x", data[9]) + ", "
-                + "ga3=" + Utils.getIndividualAddress(data[10], data[11]) + ", "
+                + "ga3=" + Utils.getGroupAddress(data[10], data[11]) + ", "
                 :"")
                 
                 :""
