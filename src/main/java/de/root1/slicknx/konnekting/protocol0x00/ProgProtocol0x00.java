@@ -37,6 +37,7 @@ public class ProgProtocol0x00 {
 
     private static final Logger log = LoggerFactory.getLogger(ProgProtocol0x00.class);
     private static final Logger plog = LoggerFactory.getLogger("ProgrammingLogger");
+    
 
     public static ProgProtocol0x00 getInstance(Knx knx) {
         boolean debug = Boolean.getBoolean("de.root1.slicknx.konnekting.debug");
@@ -75,7 +76,7 @@ public class ProgProtocol0x00 {
     public static final byte MSGTYPE_READ_COM_OBJECT = 41;
     public static final byte MSGTYPE_ANSWER_COM_OBJECT = 42;
 
-    private static final List<ProgMessage> receivedMessages = new ArrayList<>();
+    private final List<ProgMessage> receivedMessages = new ArrayList<>();
 
     private final GroupAddressListener gal = new GroupAddressListener() {
 
@@ -192,7 +193,13 @@ public class ProgProtocol0x00 {
         log.debug("Waiting for single message [{}]", msgClass.getName());
         List<ProgMessage> list = waitForMessage(WAIT_TIMEOUT, true);
         if (list.size() != 1) {
-            throw new KnxException("Received " + list.size() + " messages. Expected 1 of type " + msgClass.getName() + ". Aborting");
+            
+            StringBuilder sb = new StringBuilder();
+            for (ProgMessage msg : list) {
+                sb.append("\n"+msg.toString());
+            }
+            
+            throw new KnxException("Received " + list.size() + " messages. Expected 1 of type " + msgClass.getName() + ". Aborting. List of messages: "+sb.toString());
         }
         if (!(list.get(0).getClass().isAssignableFrom(msgClass))) {
             throw new KnxException("Wrong message type received. Expected:" + msgClass + ". Got: " + list.get(0));

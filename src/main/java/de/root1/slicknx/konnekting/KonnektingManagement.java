@@ -128,7 +128,6 @@ public class KonnektingManagement {
             throw new IllegalStateException("Not in programming-state- Call startProgramming() first.");
         }
         protocol.writeProgrammingMode(individualAddress, false);
-        protocol.restart(individualAddress);
         isProgramming = false;
     }
 
