@@ -35,8 +35,8 @@ class MsgAck extends ProgMessage {
     public String toString() {
         return "ACK{"
             + "type="+(isAcknowledged()?"ACK":"NACK")+" "
-            + "errorCode="+String.format("0x02x", getErrorCode())+" "
-            + "indexInformation="+(hasIndexInformation()?String.format("0x02x", getIndexInformation()):"false")
+            + "errorCode="+String.format("0x%02x", getErrorCode())+" "
+            + "indexInformation="+(hasIndexInformation()?String.format("0x%02x", getIndexInformation()):"false")
             + "}";
     }
 
