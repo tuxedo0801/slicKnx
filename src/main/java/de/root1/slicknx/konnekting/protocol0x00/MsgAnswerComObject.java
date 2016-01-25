@@ -29,11 +29,9 @@ import java.util.List;
  * @author achristian
  */
 class MsgAnswerComObject extends ProgMessage {
-    private final byte[] data;
 
     public MsgAnswerComObject(byte[] data) {
         super(data);
-        this.data = data;
     }
     
     public List<ComObject> getComObjects() throws KnxException {

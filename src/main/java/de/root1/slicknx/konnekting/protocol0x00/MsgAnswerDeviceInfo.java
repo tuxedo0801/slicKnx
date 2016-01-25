@@ -27,11 +27,9 @@ import de.root1.slicknx.Utils;
  */
 class MsgAnswerDeviceInfo extends ProgMessage {
 
-    private final byte[] message;
     
-    public MsgAnswerDeviceInfo(byte[] message) {
-        super(message);
-        this.message = message;
+    public MsgAnswerDeviceInfo(byte[] data) {
+        super(data);
     }
 
     /**
@@ -39,8 +37,8 @@ class MsgAnswerDeviceInfo extends ProgMessage {
      * @return 
      */
     public int getManufacturerId() {
-        byte hi = message[2];
-        byte lo = message[3];
+        byte hi = data[2];
+        byte lo = data[3];
         
         return ((hi << 8)&0xffff) + ((lo << 0)&0xff);
     }
@@ -50,7 +48,7 @@ class MsgAnswerDeviceInfo extends ProgMessage {
      * @return 
      */
     public short getDeviceId() {
-        return (short) (message[4]&0xff);
+        return (short) (data[4]&0xff);
     }
 
     /**
@@ -58,21 +56,21 @@ class MsgAnswerDeviceInfo extends ProgMessage {
      * @return 
      */
     public short getRevisionId() {
-        return (short) (message[5]&0xff);
+        return (short) (data[5]&0xff);
     }
 
     public byte getDeviceFlags() {
-        return message[6];
+        return data[6];
     }
 
     public String getIndividualAddress() throws KnxException {
-        return Utils.getIndividualAddress(message[7], message[8]).toString();
+        return Utils.getIndividualAddress(data[7], data[8]).toString();
     }
 
     @Override
     public String toString() {
         return "AnswerDeviceInfo{manufacturerId="+String.format("0x%04x", getManufacturerId())+", "
-            + "deviceId="+String.format("0x%02x", getManufacturerId())+", "
+            + "deviceId="+String.format("0x%02x", getDeviceId())+", "
             + "revisionId="+String.format("0x%02x", getRevisionId())
             +"}";
     }

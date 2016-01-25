@@ -9,6 +9,8 @@ import de.root1.slicknx.GroupAddressEvent;
 import de.root1.slicknx.GroupAddressListener;
 import de.root1.slicknx.Knx;
 import de.root1.slicknx.KnxException;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 
 /**
  *
@@ -16,8 +18,13 @@ import de.root1.slicknx.KnxException;
  */
 public class TestListenerOwnTelegrams {
     
-    public static void main(String[] args) throws KnxException, InterruptedException {
-        Knx knx = new Knx("1.0.234");
+    public static void main(String[] args) throws KnxException, InterruptedException, UnknownHostException {
+//        Knx knx = new Knx("1.0.234");
+        // 192.168.200.71
+//        Knx knx = new Knx(Inet4Address.getByName("192.168.200.71"));
+        Knx knx = new Knx(Knx.SerialType.TPUART, "/dev/ttyUSB0");
+        knx.setIndividualAddress("1.0.234");
+        
         knx.setLoopbackMode(true);
         
         

@@ -23,6 +23,9 @@ package de.root1.slicknx.konnekting.protocol0x00;
  * @author achristian
  */
 class MsgAck extends ProgMessage {
+    
+    public static final byte ACK = 0x00;
+    public static final byte NO_INDEX = (byte) 0xFF;
 
     public MsgAck(byte[] data) {
         super(data);
@@ -30,9 +33,30 @@ class MsgAck extends ProgMessage {
 
     @Override
     public String toString() {
-        return "ACK{}";
+        return "ACK{"
+            + "type="+(isAcknowledged()?"ACK":"NACK")+" "
+            + "errorCode="+String.format("0x02x", getErrorCode())+" "
+            + "indexInformation="+(hasIndexInformation()?String.format("0x02x", getIndexInformation()):"false")
+            + "}";
+    }
+
+    boolean isAcknowledged() {
+        return data[2]==ACK;
+    }
+    
+    public byte getErrorCode() {
+        return data[3];
+    }
+    
+    public byte getIndexInformation() {
+        return data[4];
+    }
+    
+    public boolean hasIndexInformation(){
+        return data[4]!=NO_INDEX;
     }
     
     
     
 }
+

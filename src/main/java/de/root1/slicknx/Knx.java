@@ -21,6 +21,7 @@ package de.root1.slicknx;
 import de.root1.slicknx.dptxlator.DPTXlator8BitEnumeration;
 import de.root1.slicknx.dptxlator.DPTXlator8BitSigned;
 import de.root1.slicknx.konnekting.KonnektingManagement;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tuwien.auto.calimero.GroupAddress;
@@ -166,13 +168,14 @@ public final class Knx {
             // setup knx connection
 //            netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.TUNNELING, null, new InetSocketAddress(host, port), false, new TPSettings(false));
             netlink = new KNXNetworkLinkIP(host.getHostName(), new TPSettings());
+//            netlink = new KNXNetworkLinkIP(KNXNetworkLinkIP.TUNNELING, InetSocketAddress.createUnresolved("buero", 0), InetSocketAddress.createUnresolved(host.getHostAddress(), 3671), true, new TPSettings());
 
             pc = new SlicKnxProcessCommunicatorImpl(netlink);
             log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
             pc.addProcessListener(ggal);
         } catch (KNXException | InterruptedException ex) {
             throw new KnxException("Error connecting to KNX: " + ex.getMessage(), ex);
-        }
+        } 
     }
 
     /**

@@ -7,6 +7,7 @@ package de.root1.slicknx.konnekting.protocol0x00;
 
 import de.root1.slicknx.KnxException;
 import de.root1.slicknx.Utils;
+import static de.root1.slicknx.konnekting.protocol0x00.ProgProtocol0x00.MSGTYPE_RESTART;
 
 /**
  *
@@ -16,6 +17,11 @@ public class MsgRestart extends ProgMessage {
 
     public MsgRestart(byte[] data) {
         super(data);
+    }
+
+    MsgRestart(String individualAddress) throws KnxException {
+        super(MSGTYPE_RESTART);
+        System.arraycopy(Utils.getIndividualAddress(individualAddress).toByteArray(), 0, data, 2, 2);
     }
     
     public String getAddress() throws KnxException {

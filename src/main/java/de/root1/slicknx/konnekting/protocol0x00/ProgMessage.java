@@ -18,6 +18,7 @@
  */
 package de.root1.slicknx.konnekting.protocol0x00;
 
+import static de.root1.slicknx.konnekting.protocol0x00.ProgProtocol0x00.PROTOCOL_VERSION;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,23 +29,45 @@ import org.slf4j.LoggerFactory;
 abstract class ProgMessage {
     
     protected Logger log = LoggerFactory.getLogger(ProgMessage.class);
-    private final byte protocolversion;
-    private final byte msgType;
     protected final byte[] data;
 
     public ProgMessage(byte[] message) {
         this.data = message;
-        protocolversion = message[0];
-        msgType = message[1];
+    }
+    
+    public ProgMessage(byte type) {
+        data = new byte[14];
+        data[1] = type;
+        for (int i = 2; i < data.length; i++) {
+            data[i] = 0x00;
+        }
     }
 
     public byte getType() {
-        return msgType;
+        return data[1];
     }
 
     public byte getProtocolversion() {
-        return protocolversion;
+        return data[0];
     }
-    
+
+    @Override
+    public String toString() {
+        return String.format("ProgMessage[%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x]",
+            data[0],
+            data[1],
+            data[2],
+            data[3],
+            data[4],
+            data[5],
+            data[6],
+            data[7],
+            data[8],
+            data[9],
+            data[10],
+            data[11],
+            data[12],
+            data[13]);
+    }
     
 }
