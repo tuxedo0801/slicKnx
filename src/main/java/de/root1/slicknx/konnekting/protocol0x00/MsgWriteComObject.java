@@ -23,7 +23,7 @@ class MsgWriteComObject extends ProgMessage {
             throw new IllegalArgumentException("you must write at least one com object!");
         }
         int num = 1;
-        
+
         if (co2 != null) {
             num++;
             if (co3 != null) {
@@ -48,39 +48,31 @@ class MsgWriteComObject extends ProgMessage {
         }
 
     }
-    
-    
 
     @Override
     public String toString() {
         try {
             int len = data[2];
             return "MsgWriteComObject{"
-                + "len=" + data[2]+", "
-                
-                + "id1=" + String.format("0x%02x", data[3]) + ", "
-                + "ga1=" + Utils.getGroupAddress(data[4], data[5]) + ", "
-                
-                + (len>=2?
-                "id2=" + String.format("0x%02x", data[6]) + ", "
-                + "ga2=" + Utils.getGroupAddress(data[7], data[8]) + ", "
-                
-                + (len==3?
-                "id3=" + String.format("0x%02x", data[9]) + ", "
-                + "ga3=" + Utils.getGroupAddress(data[10], data[11]) + ", "
-                :"")
-                
-                :""
-                )
-                + "}";
+                    + "len=" + data[2] + ", "
+                    + "id1=" + String.format("0x%02x", data[3]) + ", "
+                    + "ga1=" + Utils.getGroupAddress(data[4], data[5]) + ", "
+                    + "ga1(hex)=0x" + Utils.bytesToHex(new byte[]{data[4], data[5]}) + ", "
+                            + (len >= 2
+                                    ? "id2=" + String.format("0x%02x", data[6]) + ", "
+                                    + "ga2=" + Utils.getGroupAddress(data[7], data[8]) + ", "
+                                    + "ga2(hex)=0x" + Utils.bytesToHex(new byte[]{data[7], data[8]}) + ", "
+                                    + (len == 3
+                                            ? "id3=" + String.format("0x%02x", data[9]) + ", "
+                                            + "ga3=" + Utils.getGroupAddress(data[10], data[11]) + ", "
+                                            + "ga3(hex)=0x" + Utils.bytesToHex(new byte[]{data[10], data[11]}) + ", "
+                                            : "")
+                                    : "")
+                            + "}";
         } catch (KnxException ex) {
             ex.printStackTrace();
-            return "MsgWriteComObject{toStringFailed! -> "+super.toString()+"}";
+            return "MsgWriteComObject{toStringFailed! -> " + super.toString() + "}";
         }
     }
-
-    
-    
-    
 
 }

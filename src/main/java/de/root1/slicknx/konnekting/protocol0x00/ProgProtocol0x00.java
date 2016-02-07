@@ -336,6 +336,7 @@ public class ProgProtocol0x00 {
                 } else if (count == 1 && list.get(0).equals(address)) {
                     log.debug("One device responded, but already has {}.", address);
                     msg = "One device responded, but already has " + address + ".";
+                    setAddr = true;
                 }
             } catch (KnxException ex) {
                 if (exists) {
