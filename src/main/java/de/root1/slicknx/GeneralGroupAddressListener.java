@@ -76,7 +76,7 @@ public class GeneralGroupAddressListener extends ProcessListenerEx {
                 List<GroupAddressListener> l = listeners.get(destination);
                 if (l != null) {
 
-                    List<GroupAddressListener> list = new ArrayList<>();
+                    List<GroupAddressListener> list = new ArrayList<>(l);
 //                    System.out.println("Forward " + gae + " to " + list.size() + " listeners");
                     for (GroupAddressListener listener : list) {
                         switch (gae.getType()) {
