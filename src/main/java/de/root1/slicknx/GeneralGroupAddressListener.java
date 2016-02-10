@@ -89,6 +89,24 @@ public class GeneralGroupAddressListener extends ProcessListenerEx {
                         }
                     }
                 }
+                
+                List<GroupAddressListener> wildcardlist = listeners.get("*");
+                if (wildcardlist != null) {
+//                    System.out.println("Forward " + gae + " to " + list.size() + " listeners");
+                    for (GroupAddressListener listener : wildcardlist) {
+                        switch (gae.getType()) {
+                            case GROUP_READ:
+                                listener.readRequest(gae);
+                                break;
+                            case GROUP_RESPONSE:
+                                listener.readResponse(gae);
+                                break;
+                            case GROUP_WRITE:
+                                listener.write(gae);
+                                break;
+                        }
+                    }
+                }
             }
         } catch (Exception ex) {
             ex.printStackTrace();
