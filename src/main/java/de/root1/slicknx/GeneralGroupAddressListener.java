@@ -18,6 +18,7 @@
  */
 package de.root1.slicknx;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import tuwien.auto.calimero.DetachEvent;
@@ -72,8 +73,10 @@ public class GeneralGroupAddressListener extends ProcessListenerEx {
             }
             // forward
             synchronized (listeners) {
-                List<GroupAddressListener> list = listeners.get(destination);
-                if (list != null) {
+                List<GroupAddressListener> l = listeners.get(destination);
+                if (l != null) {
+
+                    List<GroupAddressListener> list = new ArrayList<>();
 //                    System.out.println("Forward " + gae + " to " + list.size() + " listeners");
                     for (GroupAddressListener listener : list) {
                         switch (gae.getType()) {
@@ -89,9 +92,11 @@ public class GeneralGroupAddressListener extends ProcessListenerEx {
                         }
                     }
                 }
-                
-                List<GroupAddressListener> wildcardlist = listeners.get("*");
-                if (wildcardlist != null) {
+
+                List<GroupAddressListener> w = listeners.get("*");
+
+                if (w != null) {
+                    List<GroupAddressListener> wildcardlist = new ArrayList<>(w);
 //                    System.out.println("Forward " + gae + " to " + list.size() + " listeners");
                     for (GroupAddressListener listener : wildcardlist) {
                         switch (gae.getType()) {
@@ -136,7 +141,7 @@ public class GeneralGroupAddressListener extends ProcessListenerEx {
     void setMaster(GroupAddressListener listener) {
         globalGroupAddressListener = listener;
     }
-    
+
     GroupAddressListener getMaster() {
         return globalGroupAddressListener;
     }
