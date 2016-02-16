@@ -30,7 +30,7 @@ import de.root1.slicknx.KnxException;
 public class TestTPUart {
     
     public static void main(String[] args) throws KnxException {
-        Knx knx = new Knx(Knx.SerialType.TPUART, "/dev/ttyUSB0");
+        Knx knx = new Knx(Knx.SerialType.TPUART, "/dev/ttyS0");
         
         knx.setGlobalGroupAddressListener(new GroupAddressListener() {
 
