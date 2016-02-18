@@ -92,7 +92,11 @@ public class KonnektingManagement {
 
         // set prog mode based on pa
         log.debug("Set programming mode = true");
-        protocol.writeProgrammingMode(individualAddress, true);
+        try {
+            protocol.writeProgrammingMode(individualAddress, true);
+        } catch (KnxException ex) {
+            throw new KnxException("No device responded for enabling prog-mode on address "+individualAddress, ex);
+        }
 
         log.debug("Checking for devices in prog mode");
         // check for single device in prog mode (uses ReadProgMode)
