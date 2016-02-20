@@ -25,6 +25,7 @@ import de.root1.slicknx.KnxException;
 import de.root1.slicknx.konnekting.ComObject;
 import de.root1.slicknx.konnekting.DeviceInfo;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -328,17 +329,23 @@ public class ProgProtocol0x00 {
                 List<String> list = readIndividualAddress(false);
                 count = list.size();
 
+                log.info("responsed: {}",count);
+                
                 if (count == 0) {
                     log.info("No device responded.");
                     msg = "no device in prog mode";
                 } else if (count == 1 && !list.get(0).equals(address)) {
+                    msg = "one device with different address ("+list.get(0)+") responded.";
                     setAddr = true;
                 } else if (count == 1 && list.get(0).equals(address)) {
                     log.debug("One device responded, but already has {}.", address);
                     msg = "One device responded, but already has " + address + ".";
                     setAddr = true;
+                } else {
+                    msg = "more than one device in prog mode: "+Arrays.toString(list.toArray());
                 }
             } catch (KnxException ex) {
+                ex.printStackTrace();
                 if (exists) {
                     log.warn("device exists but is not in programming mode, cancel writing address");
                     throw new KnxException("device exists but is not in programming mode, cancel writing address");

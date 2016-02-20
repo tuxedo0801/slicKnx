@@ -535,7 +535,7 @@ public final class Knx {
             pc.write(new GroupAddress(ga), t);
 
         } catch (KNXException ex) {
-            throw new KnxException("Error writing dpt8", ex);
+            throw new KnxException("Error writing raw", ex);
         }
     }
 
