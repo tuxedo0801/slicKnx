@@ -20,7 +20,6 @@ package de.root1.slicknx;
 
 import de.root1.slicknx.dptxlator.DPTXlator8BitEnumeration;
 import de.root1.slicknx.dptxlator.DPTXlator8BitSigned;
-import de.root1.slicknx.konnekting.KonnektingManagement;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -229,18 +228,6 @@ public final class Knx {
      */
     public String getIndividualAddress() {
         return netlink.getKNXMedium().getDeviceAddress().toString();
-    }
-
-//    /**
-//     * Returns whether an individual address has been set
-//     *
-//     * @return true if individual address has been set, false if not
-//     */
-//    public boolean hasIndividualAddress() {
-//        return individualAddress != null;
-//    }
-    public KonnektingManagement createKarduinoManagement() {
-        return KonnektingManagement.createInstance(this);
     }
 
     /**
