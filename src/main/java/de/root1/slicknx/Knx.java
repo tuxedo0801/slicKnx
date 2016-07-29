@@ -104,11 +104,35 @@ public final class Knx {
         }
     }
 
-    public static Knx autoDiscover() throws KnxException {
+    public static Knx autoDiscover(AutoDiscoverProgressListener progress) throws KnxException {
         try {
 
             Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
 
+            // addresses to scan
+            int count = 0;
+
+            if (progress != null) {
+                // gathering count data
+                while (networkInterfaces.hasMoreElements()) {
+                    NetworkInterface ni = networkInterfaces.nextElement();
+
+                    if (ni.isLoopback() || !ni.isUp()) {
+                        continue;
+                    }
+
+                    for (InterfaceAddress iaddr : ni.getInterfaceAddresses()) {
+                        if (iaddr.getAddress() instanceof Inet6Address) {
+                            continue;
+                        }
+                        count++;
+                    }
+                }
+
+                networkInterfaces = NetworkInterface.getNetworkInterfaces();
+            }
+
+            int i = 0;
             while (networkInterfaces.hasMoreElements()) {
                 NetworkInterface ni = networkInterfaces.nextElement();
 
@@ -124,6 +148,10 @@ public final class Knx {
                         }
                         System.out.println("Discovering on " + ni.getName() + "@" + iaddr.getAddress());
                         Discoverer discoverer = new Discoverer(iaddr.getAddress(), 0, false, false);
+                        if (progress != null) {
+                            i++;
+                            progress.onProgress(i, count, ni, iaddr.getAddress());
+                        }
                         discoverer.startSearch(ni, 5, true);
                         SearchResponse[] result = discoverer.getSearchResponses();
                         System.out.println(Arrays.toString(result));
@@ -148,8 +176,12 @@ public final class Knx {
 
                             System.out.println("ControlEndpoint: " + cep);
                             discoverer.clearSearchResponses();
-                            
-                            return new Knx(ni, InetAddress.getByAddress(device.getMulticastAddress()));
+                            InetAddress mcast = InetAddress.getByAddress(device.getMulticastAddress());
+
+                            if (progress != null) {
+                                progress.done(device.getAddress().toString(), device.getName(), device.getKNXMediumString(), mcast, device.getMACAddressString());
+                            }
+                            return new Knx(ni, mcast);
                         }
                     }
                 } catch (Exception ex) {
@@ -158,9 +190,11 @@ public final class Knx {
 
             }
 
-            return new Knx();
         } catch (SocketException ex) {
             ex.printStackTrace();
+        }
+        if (progress != null) {
+            progress.noResult();
         }
         return null;
     }
@@ -272,9 +306,9 @@ public final class Knx {
             throw new KnxException("Error connecting to KNX: " + ex.getMessage(), ex);
         }
     }
-    
+
     public Knx(NetworkInterface ni, InetAddress mcaddr) throws KnxException {
-        
+
         try {
             this.hostadr = mcaddr;
 
@@ -806,9 +840,25 @@ public final class Knx {
 
     public static void main(String[] args) throws UnknownHostException, KnxException, KNXException, InterruptedException {
 
-        final Knx knx = Knx.autoDiscover();
-        knx.addGroupAddressListener("*", new GroupAddressListener() {
+        final Knx knx = Knx.autoDiscover(new AutoDiscoverProgressListener() {
+            @Override
+            public void onProgress(int i, int max, NetworkInterface iface, InetAddress address) {
+                System.out.println("i=" + i + " max=" + max + " iface=" + iface + " addr=" + address);
+            }
 
+            @Override
+            public void done(String individualAddress, String name, String knxMediumString, InetAddress mcast, String macAddressString) {
+                System.out.println("ia=" + individualAddress + " name=" + name + " knxmedium=" + knxMediumString + " mcast=" + mcast + " mac=" + macAddressString);
+            }
+
+            @Override
+            public void noResult() {
+                System.out.println("No result");
+            }
+        });
+
+
+        knx.addGroupAddressListener("*", new GroupAddressListener() {
             @Override
             public void readRequest(GroupAddressEvent event) {
             }
@@ -819,10 +869,10 @@ public final class Knx {
 
             @Override
             public void write(GroupAddressEvent event) {
-                System.out.println("event="+event);
+                System.out.println("event=" + event);
             }
         });
-        
+
         Thread.sleep(30000);
 
 //        final Knx knx = new Knx("1.1.254");
