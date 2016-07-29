@@ -20,13 +20,21 @@ package de.root1.slicknx;
 
 import de.root1.slicknx.dptxlator.DPTXlator8BitEnumeration;
 import de.root1.slicknx.dptxlator.DPTXlator8BitSigned;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.InterfaceAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tuwien.auto.calimero.GroupAddress;
@@ -38,6 +46,11 @@ import tuwien.auto.calimero.exception.KNXException;
 import tuwien.auto.calimero.exception.KNXFormatException;
 import tuwien.auto.calimero.exception.KNXRemoteException;
 import tuwien.auto.calimero.exception.KNXTimeoutException;
+import tuwien.auto.calimero.knxnetip.Discoverer;
+import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
+import tuwien.auto.calimero.knxnetip.util.DeviceDIB;
+import tuwien.auto.calimero.knxnetip.util.HPAI;
+import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB;
 import tuwien.auto.calimero.link.KNXLinkClosedException;
 import tuwien.auto.calimero.link.KNXNetworkLink;
 import tuwien.auto.calimero.link.KNXNetworkLinkIP;
@@ -52,21 +65,21 @@ import tuwien.auto.calimero.process.ProcessCommunicationBase;
 public final class Knx {
 
     private static final Logger log = LoggerFactory.getLogger(Knx.class);
-
     private KNXNetworkLink netlink;
     private int port = 3671;
     private InetAddress hostadr;
-
     private final Map<String, List<GroupAddressListener>> listeners = new HashMap<>();
-
     private final GeneralGroupAddressListener ggal = new GeneralGroupAddressListener(null, listeners);
-
     /**
      * Used to write data to KNX and listen to GAs
      */
     private SlicKnxProcessCommunicatorImpl pc;
     private String individualAddress = null;
-    public enum SerialType {TPUART, FT12, UNDEFINED};
+
+    public enum SerialType {
+
+        TPUART, FT12, UNDEFINED
+    };
 
     static {
 
@@ -80,7 +93,7 @@ public final class Knx {
                     DPTXlator8BitSigned.class, desc));
 
         }
-        
+
         if (!allTypes.containsKey(TranslatorTypes.TYPE_ENUM8)) {
 
             String desc = "8 Bit Enumeration (main type 20)";
@@ -90,34 +103,99 @@ public final class Knx {
 
         }
     }
+
+    public static Knx autoDiscover() throws KnxException {
+        try {
+
+            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+
+            while (networkInterfaces.hasMoreElements()) {
+                NetworkInterface ni = networkInterfaces.nextElement();
+
+                if (ni.isLoopback() || !ni.isUp()) {
+                    continue;
+                }
+                System.out.println("Found network interface: " + ni.getName() + "/" + ni.getDisplayName() + "/" + ni.getInterfaceAddresses());
+                try {
+
+                    for (InterfaceAddress iaddr : ni.getInterfaceAddresses()) {
+                        if (iaddr.getAddress() instanceof Inet6Address) {
+                            continue;
+                        }
+                        System.out.println("Discovering on " + ni.getName() + "@" + iaddr.getAddress());
+                        Discoverer discoverer = new Discoverer(iaddr.getAddress(), 0, false, false);
+                        discoverer.startSearch(ni, 5, true);
+                        SearchResponse[] result = discoverer.getSearchResponses();
+                        System.out.println(Arrays.toString(result));
+                        for (SearchResponse sr : result) {
+                            System.out.println("Found: ");
+                            ServiceFamiliesDIB serviceFamilies = sr.getServiceFamilies();
+                            int[] familyIds = serviceFamilies.getFamilyIds();
+
+                            //                for (int familyId : familyIds) {
+                            //                    String familyName = serviceFamilies.getFamilyName(familyId);
+                            //                    System.out.println("Familyname: "+familyName);
+                            //                }
+                            System.out.println("ServiceFamilies: " + serviceFamilies);
+                            DeviceDIB device = sr.getDevice();
+                            //                System.out.println("Device name: "+device.getName());
+                            //                System.out.println("Device medium: "+device.getKNXMediumString());
+                            //                System.out.println("Device mac: "+device.getMACAddressString());
+                            //                System.out.println("Device SerialNo: "+device.getSerialNumberString());
+                            System.out.println("Device: " + device);
+
+                            HPAI cep = sr.getControlEndpoint();
+
+                            System.out.println("ControlEndpoint: " + cep);
+                            discoverer.clearSearchResponses();
+                            
+                            return new Knx(ni, InetAddress.getByAddress(device.getMulticastAddress()));
+                        }
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+            }
+
+            return new Knx();
+        } catch (SocketException ex) {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
     /**
      * Start KNX communication via serial connection
+     *
      * @param type according to your serial connection type
      * @param device device, like "/dev/ttyUSB0" or "COM10"
-     * @param individualAddress the individual address to use when sending to knx
+     * @param individualAddress the individual address to use when sending to
+     * knx
      * @throws KnxException in case of any problem
      */
     public Knx(SerialType type, String device, String individualAddress) throws KnxException {
         this(type, device);
         setIndividualAddress(individualAddress);
     }
-    
+
     /**
      * Start KNX communication via serial connection
+     *
      * @param type according to your serial connection type
      * @param device device, like "/dev/ttyUSB0" or "COM10"
      * @throws KnxException in case of any problem
      */
     public Knx(SerialType type, String device) throws KnxException {
         try {
-            switch(type) {
+            switch (type) {
                 case TPUART:
                     netlink = new KNXNetworkLinkTpuart(device, new TPSettings(), new ArrayList());
                     break;
                 case FT12:
                 case UNDEFINED:
                     log.error("SerialType [{}] not yet supported", type);
-                    throw new KnxException("SerialType ["+type+"] not yet supported");
+                    throw new KnxException("SerialType [" + type + "] not yet supported");
             }
             // setup knx connection
 //            netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.TUNNELING, null, new InetSocketAddress(host, port), false, new TPSettings(false));
@@ -126,7 +204,7 @@ public final class Knx {
             log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
             pc.addProcessListener(ggal);
         } catch (KNXException ex) {
-            throw new KnxException("error creating serial link for type ["+type+"]", ex);
+            throw new KnxException("error creating serial link for type [" + type + "]", ex);
         }
     }
 
@@ -172,11 +250,12 @@ public final class Knx {
             pc.addProcessListener(ggal);
         } catch (KNXException | InterruptedException ex) {
             throw new KnxException("Error connecting to KNX: " + ex.getMessage(), ex);
-        } 
+        }
     }
 
     /**
      * Starts routing mode
+     *
      * @throws KnxException if connection to knx(router, ...) fails
      */
     public Knx() throws KnxException {
@@ -194,15 +273,32 @@ public final class Knx {
         }
     }
     
-    public void setLoopbackMode(boolean loopback) {
+    public Knx(NetworkInterface ni, InetAddress mcaddr) throws KnxException {
         
+        try {
+            this.hostadr = mcaddr;
+
+            // setup knx connection
+//            netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.ROUTING, null, new InetSocketAddress(hostadr, port), false, new TPSettings());
+            netlink = new SlicKNXNetworkLinkIP(ni, hostadr, new TPSettings());
+
+            pc = new SlicKnxProcessCommunicatorImpl(netlink);
+            log.debug("Connected to knx via {}:{} on {} and individualaddress {}", new Object[]{hostadr, port, ni, individualAddress});
+            pc.addProcessListener(ggal);
+        } catch (KNXException ex) {
+            throw new KnxException("Error connecting to KNX: " + ex.getMessage(), ex);
+        }
+    }
+
+    public void setLoopbackMode(boolean loopback) {
+
         if (netlink instanceof SlicKNXNetworkLinkIP) {
             SlicKNXNetworkLinkIP nl = (SlicKNXNetworkLinkIP) netlink;
             nl.setLoopbackMode(loopback);
         } else {
             log.info("network link instance has no explicit loopback mode");
         }
-        
+
     }
 
     /**
@@ -495,7 +591,6 @@ public final class Knx {
         try {
 
             DPTXlator t = new DPTXlator(0) {
-
                 @Override
                 public String[] getAllValues() {
                     return null;
@@ -514,7 +609,6 @@ public final class Knx {
                 public int getItems() {
                     return data.length;
                 }
-
             };
 
             t.setData(data, 0);
@@ -629,13 +723,13 @@ public final class Knx {
 
         try {
             String value = pc.read(new StateDP(new GroupAddress(ga), "", mainDpt, dpt));
-            
+
             return value;
         } catch (KNXException | InterruptedException ex) {
             throw new KnxException("Error reading DPT" + dpt + " from " + ga, ex);
         }
     }
-    
+
     /**
      * Add a listener for the specified group address.
      *
@@ -710,10 +804,28 @@ public final class Knx {
         netlink.close();
     }
 
-    public static void main(String[] args) throws UnknownHostException, KnxException, KNXException {
+    public static void main(String[] args) throws UnknownHostException, KnxException, KNXException, InterruptedException {
 
-        final Knx knx = new Knx("1.1.254");
+        final Knx knx = Knx.autoDiscover();
+        knx.addGroupAddressListener("*", new GroupAddressListener() {
 
+            @Override
+            public void readRequest(GroupAddressEvent event) {
+            }
+
+            @Override
+            public void readResponse(GroupAddressEvent event) {
+            }
+
+            @Override
+            public void write(GroupAddressEvent event) {
+                System.out.println("event="+event);
+            }
+        });
+        
+        Thread.sleep(30000);
+
+//        final Knx knx = new Knx("1.1.254");
 //        knx.addGroupAddressListener("1/1/200", new GroupAddressListener() {
 //            
 //            @Override
@@ -736,7 +848,7 @@ public final class Knx {
 //            }
 //        });
 //        knx.write("0/0/1", "1.005", "no alarm");
-        System.out.println(knx.read("4/0/31", "1.008"));
+//        System.out.println(knx.read("4/0/31", "1.008"));
 //
 //        Map allMainTypes = TranslatorTypes.getAllMainTypes();
 //        Iterator iterator = allMainTypes.keySet().iterator();
@@ -755,7 +867,5 @@ public final class Knx {
 //                ex.printStackTrace();
 //            }
 //        }
-
     }
-
 }
