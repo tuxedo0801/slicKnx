@@ -14,7 +14,7 @@ import java.net.NetworkInterface;
 public interface AutoDiscoverProgressListener {
     
     public void onProgress(int i, int max, NetworkInterface iface, InetAddress address);
-    public void done(String individualAddress, String name, String knxMediumString, InetAddress mcast, String macAddressString);
+    public void done(NetworkInterface ni, String individualAddress, String name, String knxMediumString, InetAddress mcast, String macAddressString);
     public void noResult();
     
 }

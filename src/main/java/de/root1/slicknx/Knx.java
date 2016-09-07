@@ -20,7 +20,6 @@ package de.root1.slicknx;
 
 import de.root1.slicknx.dptxlator.DPTXlator8BitEnumeration;
 import de.root1.slicknx.dptxlator.DPTXlator8BitSigned;
-import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -179,7 +178,7 @@ public final class Knx {
                             InetAddress mcast = InetAddress.getByAddress(device.getMulticastAddress());
 
                             if (progress != null) {
-                                progress.done(device.getAddress().toString(), device.getName(), device.getKNXMediumString(), mcast, device.getMACAddressString());
+                                progress.done(ni, device.getAddress().toString(), device.getName(), device.getKNXMediumString(), mcast, device.getMACAddressString());
                             }
                             return new Knx(ni, mcast);
                         }
@@ -847,8 +846,8 @@ public final class Knx {
             }
 
             @Override
-            public void done(String individualAddress, String name, String knxMediumString, InetAddress mcast, String macAddressString) {
-                System.out.println("ia=" + individualAddress + " name=" + name + " knxmedium=" + knxMediumString + " mcast=" + mcast + " mac=" + macAddressString);
+            public void done(NetworkInterface ni, String individualAddress, String name, String knxMediumString, InetAddress mcast, String macAddressString) {
+                System.out.println("ni=" + ni + " ia=" + individualAddress + " name=" + name + " knxmedium=" + knxMediumString + " mcast=" + mcast + " mac=" + macAddressString);
             }
 
             @Override
@@ -856,7 +855,6 @@ public final class Knx {
                 System.out.println("No result");
             }
         });
-
 
         knx.addGroupAddressListener("*", new GroupAddressListener() {
             @Override
