@@ -15,7 +15,7 @@ import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
  *
  * @author achristian
  */
-class KnxTunnelingDevice extends KnxInterfaceDevice {
+public class KnxTunnelingDevice extends KnxInterfaceDevice {
     
     private final Logger log = LoggerFactory.getLogger(getClass());
     private InetAddress ip;
