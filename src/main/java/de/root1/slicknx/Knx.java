@@ -161,6 +161,8 @@ public final class Knx {
                             ServiceFamiliesDIB serviceFamilies = sr.getServiceFamilies();
                             int[] familyIds = serviceFamilies.getFamilyIds();
 
+                            log.info("Found something: service device={} servicefamilies={} cep={}", new Object[]{sr.getDevice(), serviceFamilies.toString(), sr.getControlEndpoint()});
+                            
                             for (int n = 0; n < familyIds.length; n++) {
 
                                 int id = familyIds[n];
