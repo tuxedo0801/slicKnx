@@ -61,6 +61,11 @@ public abstract class KnxInterfaceDevice {
         return type;
     }
 
+    public NetworkInterface getNetworkInterface() {
+        return ni;
+    }
+    
+
     @Override
     public String toString() {
 

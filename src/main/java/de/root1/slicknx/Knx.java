@@ -207,6 +207,18 @@ public final class Knx {
 
         return foundDevices;
     }
+    
+    public static Knx getKnx(KnxInterfaceDevice device) throws KnxException {
+        if (device instanceof KnxRoutingDevice) {
+            KnxRoutingDevice d = (KnxRoutingDevice) device;
+            return new Knx(d.getNetworkInterface(), d.getMulticastAddress());
+        } else if (device instanceof KnxTunnelingDevice) {
+            KnxTunnelingDevice d = (KnxTunnelingDevice) device;
+            return new Knx(d.getIp());
+        } else {
+            return null;
+        }
+    }
 
     /**
      * Start KNX communication via serial connection
