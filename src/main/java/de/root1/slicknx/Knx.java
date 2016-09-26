@@ -140,14 +140,14 @@ public final class Knx {
                 if (ni.isLoopback() || !ni.isUp()) {
                     continue;
                 }
-                log.debug("Found network interface: " + ni.getName() + "/" + ni.getDisplayName() + "/" + ni.getInterfaceAddresses());
+                log.info("Found network interface: " + ni.getName() + "/" + ni.getDisplayName() + "/" + ni.getInterfaceAddresses());
                 try {
 
                     for (InterfaceAddress iaddr : ni.getInterfaceAddresses()) {
                         if (iaddr.getAddress() instanceof Inet6Address) {
                             continue;
                         }
-                        log.debug("Discovering on " + ni.getName() + "@" + iaddr.getAddress());
+                        log.info("Discovering on " + ni.getName() + "@" + iaddr.getAddress());
                         Discoverer discoverer = new Discoverer(iaddr.getAddress(), 0, false, false);
                         if (progress != null) {
                             i++;
@@ -155,7 +155,6 @@ public final class Knx {
                         }
                         discoverer.startSearch(ni, timeout, true);
                         SearchResponse[] result = discoverer.getSearchResponses();
-                        System.out.println(Arrays.toString(result));
 
                         for (SearchResponse sr : result) {
 
