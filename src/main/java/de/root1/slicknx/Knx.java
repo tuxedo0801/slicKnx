@@ -64,6 +64,7 @@ import tuwien.auto.calimero.process.ProcessCommunicationBase;
 public final class Knx {
 
     private static final Logger log = LoggerFactory.getLogger(Knx.class);
+
     private KNXNetworkLink netlink;
     private int port = 3671;
     private InetAddress hostadr;
@@ -103,7 +104,8 @@ public final class Knx {
         }
     }
 
-    public static Knx autoDiscover(AutoDiscoverProgressListener progress) throws KnxException {
+    public static List<KnxInterfaceDevice> discoverInterfaceDevices(int timeout, AutoDiscoverProgressListener progress) throws KnxException {
+        List<KnxInterfaceDevice> foundDevices = new ArrayList<>();
         try {
 
             Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
@@ -138,50 +140,51 @@ public final class Knx {
                 if (ni.isLoopback() || !ni.isUp()) {
                     continue;
                 }
-                System.out.println("Found network interface: " + ni.getName() + "/" + ni.getDisplayName() + "/" + ni.getInterfaceAddresses());
+                log.debug("Found network interface: " + ni.getName() + "/" + ni.getDisplayName() + "/" + ni.getInterfaceAddresses());
                 try {
 
                     for (InterfaceAddress iaddr : ni.getInterfaceAddresses()) {
                         if (iaddr.getAddress() instanceof Inet6Address) {
                             continue;
                         }
-                        System.out.println("Discovering on " + ni.getName() + "@" + iaddr.getAddress());
+                        log.debug("Discovering on " + ni.getName() + "@" + iaddr.getAddress());
                         Discoverer discoverer = new Discoverer(iaddr.getAddress(), 0, false, false);
                         if (progress != null) {
                             i++;
                             progress.onProgress(i, count, ni, iaddr.getAddress());
                         }
-                        discoverer.startSearch(ni, 5, true);
+                        discoverer.startSearch(ni, timeout, true);
                         SearchResponse[] result = discoverer.getSearchResponses();
                         System.out.println(Arrays.toString(result));
+
                         for (SearchResponse sr : result) {
-                            System.out.println("Found: ");
+
                             ServiceFamiliesDIB serviceFamilies = sr.getServiceFamilies();
                             int[] familyIds = serviceFamilies.getFamilyIds();
 
-                            //                for (int familyId : familyIds) {
-                            //                    String familyName = serviceFamilies.getFamilyName(familyId);
-                            //                    System.out.println("Familyname: "+familyName);
-                            //                }
-                            System.out.println("ServiceFamilies: " + serviceFamilies);
-                            DeviceDIB device = sr.getDevice();
-                            //                System.out.println("Device name: "+device.getName());
-                            //                System.out.println("Device medium: "+device.getKNXMediumString());
-                            //                System.out.println("Device mac: "+device.getMACAddressString());
-                            //                System.out.println("Device SerialNo: "+device.getSerialNumberString());
-                            System.out.println("Device: " + device);
+                            for (int n = 0; n < familyIds.length; n++) {
 
-                            HPAI cep = sr.getControlEndpoint();
+                                int id = familyIds[n];
+                                KnxInterfaceDevice foundDevice = null;
+                                switch (id) {
+                                    case ServiceFamiliesDIB.ROUTING:
+                                        foundDevice = new KnxRoutingDevice(ni, sr);
+                                        break;
+                                    case ServiceFamiliesDIB.TUNNELING:
+                                        foundDevice = new KnxTunnelingDevice(ni, sr);
+                                        break;
+                                    default:
+                                        log.warn("Unsupported device family: {}", serviceFamilies.getFamilyName(id));
+                                }
+                                if (foundDevice != null) {
+                                    log.debug("Found: {}", foundDevice);
+                                    foundDevices.add(foundDevice);
+                                }
 
-                            System.out.println("ControlEndpoint: " + cep);
-                            discoverer.clearSearchResponses();
-                            InetAddress mcast = InetAddress.getByAddress(device.getMulticastAddress());
-
-                            if (progress != null) {
-                                progress.done(ni, device.getAddress().toString(), device.getName(), device.getKNXMediumString(), mcast, device.getMACAddressString());
                             }
-                            return new Knx(ni, mcast);
+
                         }
+                        discoverer.clearSearchResponses();
                     }
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -192,10 +195,17 @@ public final class Knx {
         } catch (SocketException ex) {
             ex.printStackTrace();
         }
+
         if (progress != null) {
-            progress.noResult();
+            if (foundDevices.isEmpty()) {
+
+                progress.noResult();
+            } else {
+                progress.done(foundDevices);
+            }
         }
-        return null;
+
+        return foundDevices;
     }
 
     /**
@@ -839,35 +849,24 @@ public final class Knx {
 
     public static void main(String[] args) throws UnknownHostException, KnxException, KNXException, InterruptedException {
 
-        final Knx knx = Knx.autoDiscover(new AutoDiscoverProgressListener() {
+        List<KnxInterfaceDevice> detecedDevices = Knx.discoverInterfaceDevices(5, new AutoDiscoverProgressListener() {
             @Override
             public void onProgress(int i, int max, NetworkInterface iface, InetAddress address) {
                 System.out.println("i=" + i + " max=" + max + " iface=" + iface + " addr=" + address);
             }
 
             @Override
-            public void done(NetworkInterface ni, String individualAddress, String name, String knxMediumString, InetAddress mcast, String macAddressString) {
-                System.out.println("ni=" + ni + " ia=" + individualAddress + " name=" + name + " knxmedium=" + knxMediumString + " mcast=" + mcast + " mac=" + macAddressString);
+            public void done(List<KnxInterfaceDevice> foundDevices) {
+                for (KnxInterfaceDevice foundDevice : foundDevices) {
+                    System.out.println("Found device: " + foundDevice);
+                }
+                System.exit(0);
             }
 
             @Override
             public void noResult() {
                 System.out.println("No result");
-            }
-        });
-
-        knx.addGroupAddressListener("*", new GroupAddressListener() {
-            @Override
-            public void readRequest(GroupAddressEvent event) {
-            }
-
-            @Override
-            public void readResponse(GroupAddressEvent event) {
-            }
-
-            @Override
-            public void write(GroupAddressEvent event) {
-                System.out.println("event=" + event);
+                System.exit(1);
             }
         });
 
