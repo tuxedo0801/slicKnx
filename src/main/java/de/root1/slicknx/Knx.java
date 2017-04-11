@@ -28,12 +28,10 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tuwien.auto.calimero.GroupAddress;
@@ -47,8 +45,6 @@ import tuwien.auto.calimero.exception.KNXRemoteException;
 import tuwien.auto.calimero.exception.KNXTimeoutException;
 import tuwien.auto.calimero.knxnetip.Discoverer;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
-import tuwien.auto.calimero.knxnetip.util.DeviceDIB;
-import tuwien.auto.calimero.knxnetip.util.HPAI;
 import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB;
 import tuwien.auto.calimero.link.KNXLinkClosedException;
 import tuwien.auto.calimero.link.KNXNetworkLink;
@@ -862,30 +858,30 @@ public final class Knx {
 
     public static void main(String[] args) throws UnknownHostException, KnxException, KNXException, InterruptedException {
 
-//        List<KnxInterfaceDevice> detecedDevices = Knx.discoverInterfaceDevices(5, new AutoDiscoverProgressListener() {
-//            @Override
-//            public void onProgress(int i, int max, NetworkInterface iface, InetAddress address) {
-//                System.out.println("i=" + i + " max=" + max + " iface=" + iface + " addr=" + address);
-//            }
-//
-//            @Override
-//            public void done(List<KnxInterfaceDevice> foundDevices) {
-//                for (KnxInterfaceDevice foundDevice : foundDevices) {
-//                    System.out.println("Found device: " + foundDevice);
-//                }
-//                System.exit(0);
-//            }
-//
-//            @Override
-//            public void noResult() {
-//                System.out.println("No result");
-//                System.exit(1);
-//            }
-//        });
-//
-//        Thread.sleep(30000);
+        List<KnxInterfaceDevice> detectedDevices = Knx.discoverInterfaceDevices(1, new AutoDiscoverProgressListener() {
+            @Override
+            public void onProgress(int i, int max, NetworkInterface iface, InetAddress address) {
+                System.out.println("i=" + i + " max=" + max + " iface=" + iface + " addr=" + address);
+            }
+
+            @Override
+            public void done(List<KnxInterfaceDevice> foundDevices) {
+                for (KnxInterfaceDevice foundDevice : foundDevices) {
+                    System.out.println("Found device: " + foundDevice);
+                }
+                System.exit(0);
+            }
+
+            @Override
+            public void noResult() {
+                System.out.println("No result");
+                System.exit(1);
+            }
+        });
+
+        Thread.sleep(30000);
         
-        Knx knx = new Knx(InetAddress.getByName("169.254.168.4"));
+//        Knx knx = new Knx(InetAddress.getByName("169.254.168.4"));
         
 
 //        final Knx knx = new Knx("1.1.254");
