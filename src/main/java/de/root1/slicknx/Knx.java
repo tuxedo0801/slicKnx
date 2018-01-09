@@ -20,6 +20,7 @@ package de.root1.slicknx;
 
 import de.root1.slicknx.dptxlator.DPTXlator8BitEnumeration;
 import de.root1.slicknx.dptxlator.DPTXlator8BitSigned;
+import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -44,6 +45,7 @@ import tuwien.auto.calimero.exception.KNXFormatException;
 import tuwien.auto.calimero.exception.KNXRemoteException;
 import tuwien.auto.calimero.exception.KNXTimeoutException;
 import tuwien.auto.calimero.knxnetip.Discoverer;
+import tuwien.auto.calimero.knxnetip.KNXnetIPConnection;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
 import tuwien.auto.calimero.knxnetip.util.ServiceFamiliesDIB;
 import tuwien.auto.calimero.link.KNXLinkClosedException;
@@ -292,10 +294,8 @@ public final class Knx {
     public Knx(InetAddress host) throws KnxException {
         try {
 
-            // setup knx connection
-//            netlink = new SlicKNXNetworkLinkIP(KNXNetworkLinkIP.TUNNELING, null, new InetSocketAddress(host, port), false, new TPSettings(false));
+            // setup knx tunneling onnection
             netlink = new KNXNetworkLinkIP(host.getHostAddress(), new TPSettings());
-//            netlink = new KNXNetworkLinkIP(KNXNetworkLinkIP.TUNNELING, InetSocketAddress.createUnresolved("buero", 0), InetSocketAddress.createUnresolved(host.getHostAddress(), 3671), true, new TPSettings());
 
             pc = new SlicKnxProcessCommunicatorImpl(netlink);
             log.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
@@ -304,7 +304,7 @@ public final class Knx {
             throw new KnxException("Error connecting to KNX: " + ex.getMessage(), ex);
         }
     }
-
+    
     /**
      * Starts routing mode
      *
@@ -376,6 +376,14 @@ public final class Knx {
      */
     public String getIndividualAddress() {
         return netlink.getKNXMedium().getDeviceAddress().toString();
+    }
+    
+    /**
+     * Returns true if an individual address has been set
+     * @return 
+     */
+    public boolean hasIndividualAddress() {
+        return individualAddress!=null;
     }
 
     /**
@@ -858,73 +866,93 @@ public final class Knx {
 
     public static void main(String[] args) throws UnknownHostException, KnxException, KNXException, InterruptedException {
 
-        List<KnxInterfaceDevice> detectedDevices = Knx.discoverInterfaceDevices(1, new AutoDiscoverProgressListener() {
-            @Override
-            public void onProgress(int i, int max, NetworkInterface iface, InetAddress address) {
-                System.out.println("i=" + i + " max=" + max + " iface=" + iface + " addr=" + address);
-            }
-
-            @Override
-            public void done(List<KnxInterfaceDevice> foundDevices) {
-                for (KnxInterfaceDevice foundDevice : foundDevices) {
-                    System.out.println("Found device: " + foundDevice);
-                }
-                System.exit(0);
-            }
-
-            @Override
-            public void noResult() {
-                System.out.println("No result");
-                System.exit(1);
-            }
-        });
-
-        Thread.sleep(30000);
-        
-//        Knx knx = new Knx(InetAddress.getByName("169.254.168.4"));
-        
-
-//        final Knx knx = new Knx("1.1.254");
-//        knx.addGroupAddressListener("1/1/200", new GroupAddressListener() {
-//            
+//        List<KnxInterfaceDevice> detectedDevices = Knx.discoverInterfaceDevices(1, new AutoDiscoverProgressListener() {
 //            @Override
-//            public void readRequest(GroupAddressEvent event) {
-//                try {
-//                    System.out.println("Answering read request");
-//                    knx.writeBoolean(true, "1/1/200", true);
-//                } catch (KnxException ex) {
-//                    ex.printStackTrace();
+//            public void onProgress(int i, int max, NetworkInterface iface, InetAddress address) {
+//                System.out.println("i=" + i + " max=" + max + " iface=" + iface + " addr=" + address);
+//            }
+//
+//            @Override
+//            public void done(List<KnxInterfaceDevice> foundDevices) {
+//                for (KnxInterfaceDevice foundDevice : foundDevices) {
+//                    System.out.println("Found device: " + foundDevice);
 //                }
-//                
+//                System.exit(0);
 //            }
-//            
+//
 //            @Override
-//            public void readResponse(GroupAddressEvent event) {
-//            }
-//            
-//            @Override
-//            public void write(GroupAddressEvent event) {
+//            public void noResult() {
+//                System.out.println("No result");
+//                System.exit(1);
 //            }
 //        });
-//        knx.write("0/0/1", "1.005", "no alarm");
-//        System.out.println(knx.read("4/0/31", "1.008"));
 //
-//        Map allMainTypes = TranslatorTypes.getAllMainTypes();
-//        Iterator iterator = allMainTypes.keySet().iterator();
-//        while (iterator.hasNext()) {
-//            int main = (Integer) iterator.next();
-//            MainType mainType = (MainType) allMainTypes.get(main);
-//            try {
-//                Map subTypes = mainType.getSubTypes();
-//                Iterator innerIter = subTypes.keySet().iterator();
-//                while (innerIter.hasNext()) {
-//                    String sub = (String) innerIter.next();
-//                    DPT dpt = (DPT) subTypes.get(sub);
-//                    System.out.println(dpt.getID()+": Unit=["+dpt.getUnit()+"] lower value=["+dpt.getLowerValue()+"] upper value=["+dpt.getUpperValue()+"] Description: "+dpt.getDescription());
-//                }
-//            } catch (KNXException ex) {
-//                ex.printStackTrace();
-//            }
-//        }
+//        Thread.sleep(30000);
+//        
+////        Knx knx = new Knx(InetAddress.getByName("169.254.168.4"));
+//        
+//
+////        final Knx knx = new Knx("1.1.254");
+////        knx.addGroupAddressListener("1/1/200", new GroupAddressListener() {
+////            
+////            @Override
+////            public void readRequest(GroupAddressEvent event) {
+////                try {
+////                    System.out.println("Answering read request");
+////                    knx.writeBoolean(true, "1/1/200", true);
+////                } catch (KnxException ex) {
+////                    ex.printStackTrace();
+////                }
+////                
+////            }
+////            
+////            @Override
+////            public void readResponse(GroupAddressEvent event) {
+////            }
+////            
+////            @Override
+////            public void write(GroupAddressEvent event) {
+////            }
+////        });
+////        knx.write("0/0/1", "1.005", "no alarm");
+////        System.out.println(knx.read("4/0/31", "1.008"));
+////
+////        Map allMainTypes = TranslatorTypes.getAllMainTypes();
+////        Iterator iterator = allMainTypes.keySet().iterator();
+////        while (iterator.hasNext()) {
+////            int main = (Integer) iterator.next();
+////            MainType mainType = (MainType) allMainTypes.get(main);
+////            try {
+////                Map subTypes = mainType.getSubTypes();
+////                Iterator innerIter = subTypes.keySet().iterator();
+////                while (innerIter.hasNext()) {
+////                    String sub = (String) innerIter.next();
+////                    DPT dpt = (DPT) subTypes.get(sub);
+////                    System.out.println(dpt.getID()+": Unit=["+dpt.getUnit()+"] lower value=["+dpt.getLowerValue()+"] upper value=["+dpt.getUpperValue()+"] Description: "+dpt.getDescription());
+////                }
+////            } catch (KNXException ex) {
+////                ex.printStackTrace();
+////            }
+////        }
+        
+        Knx knx = new Knx(InetAddress.getByName("192.168.200.71"));
+        
+        knx.setGlobalGroupAddressListener(new GroupAddressListener() {
+
+            @Override
+            public void readRequest(GroupAddressEvent event) {
+            }
+
+            @Override
+            public void readResponse(GroupAddressEvent event) {
+            }
+
+            @Override
+            public void write(GroupAddressEvent event) {
+                System.out.println("even: "+event);
+            }
+        });
+        
+        Thread.sleep(3000000);
     }
 }

@@ -30,12 +30,12 @@
         <dependency>
             <groupId>com.github.calimero</groupId>
             <artifactId>calimero-core</artifactId>
-            <version>2.3-beta</version>
+            <version>2.3-AC0</version>
         </dependency>
         <dependency>
             <groupId>com.github.calimero</groupId>
             <artifactId>calimero-rxtx</artifactId>
-            <version>2.3-beta</version>
+            <version>2.3</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.rxtx</groupId>
@@ -44,7 +44,7 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>de.root1</groupId>
             <artifactId>rxtx-rebundled</artifactId>
             <version>2.1-7r2-6</version>
         </dependency>
