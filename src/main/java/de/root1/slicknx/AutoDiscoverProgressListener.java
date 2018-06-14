@@ -14,7 +14,7 @@ import java.util.List;
  */
 public interface AutoDiscoverProgressListener {
     
-    public void onProgress(int i, int max, NetworkInterface iface, InetAddress address);
+    public void found(KnxInterfaceDevice device);
     public void noResult();
 
     public void done(List<KnxInterfaceDevice> foundDevices);

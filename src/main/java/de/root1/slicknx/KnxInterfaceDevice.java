@@ -6,6 +6,7 @@
 package de.root1.slicknx;
 
 import java.net.NetworkInterface;
+import java.util.Objects;
 import tuwien.auto.calimero.IndividualAddress;
 import tuwien.auto.calimero.knxnetip.servicetype.SearchResponse;
 import tuwien.auto.calimero.knxnetip.util.DeviceDIB;
@@ -64,6 +65,57 @@ public abstract class KnxInterfaceDevice {
     public NetworkInterface getNetworkInterface() {
         return ni;
     }
+
+  @Override
+  public int hashCode() {
+    int hash = 3;
+    hash = 89 * hash + Objects.hashCode(this.type);
+    hash = 89 * hash + Objects.hashCode(this.address);
+    hash = 89 * hash + Objects.hashCode(this.knxMediumString);
+    hash = 89 * hash + Objects.hashCode(this.mac);
+    hash = 89 * hash + Objects.hashCode(this.name);
+    hash = 89 * hash + Objects.hashCode(this.sn);
+    hash = 89 * hash + Objects.hashCode(this.ni);
+    return hash;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (obj == null) {
+      return false;
+    }
+    if (getClass() != obj.getClass()) {
+      return false;
+    }
+    final KnxInterfaceDevice other = (KnxInterfaceDevice) obj;
+    if (!Objects.equals(this.knxMediumString, other.knxMediumString)) {
+      return false;
+    }
+    if (!Objects.equals(this.mac, other.mac)) {
+      return false;
+    }
+    if (!Objects.equals(this.name, other.name)) {
+      return false;
+    }
+    if (!Objects.equals(this.sn, other.sn)) {
+      return false;
+    }
+    if (this.type != other.type) {
+      return false;
+    }
+    if (!Objects.equals(this.address, other.address)) {
+      return false;
+    }
+    if (!Objects.equals(this.ni, other.ni)) {
+      return false;
+    }
+    return true;
+  }
+    
+    
     
 
     @Override
@@ -71,7 +123,7 @@ public abstract class KnxInterfaceDevice {
 
         return "device " + address + " \"" + name + "\", KNX medium " + knxMediumString
                 + ", MAC address " + mac
-                + ", S/N 0x" + sn;
+                + ", S/N 0x" + sn+ " iface "+ni.getDisplayName();
 
     }
 

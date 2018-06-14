@@ -5,9 +5,11 @@
  */
 package de.root1.slicknx;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import tuwien.auto.calimero.GroupAddress;
 import tuwien.auto.calimero.IndividualAddress;
-import tuwien.auto.calimero.exception.KNXFormatException;
+import tuwien.auto.calimero.KNXFormatException;
 
 /**
  *
@@ -51,7 +53,7 @@ public class Utils {
             return ga;
         } catch (KNXFormatException ex) {
             throw new KnxException("Group address format not correct.", ex);
-        }
+        } 
     }
     
     public static GroupAddress getGroupAddress(byte hi, byte lo) throws KnxException {
