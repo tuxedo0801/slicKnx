@@ -20,7 +20,7 @@ public class GroupListen {
     
     public static void main(String[] args) throws KnxException, InterruptedException {
         
-        args = new String[]{"3/5/1"};
+        args = new String[]{"7/7/7"};
         
         if (args.length<1) {
             printHelp();

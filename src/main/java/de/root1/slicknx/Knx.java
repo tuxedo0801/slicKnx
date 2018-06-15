@@ -107,12 +107,14 @@ public final class Knx {
     try {
 
       Discoverer discoverer = new Discoverer(0, false);
-      discoverer.startSearch(timeout, true);
+        System.out.println("search starting");
+      discoverer.startSearch(timeout, false);
+        System.out.println("search started");
 
       while (discoverer.isSearching()) {
-
+        System.out.println("searching...");
         List<Discoverer.Result<SearchResponse>> result = discoverer.getSearchResponses();
-
+        System.out.println("result.size:"+result.size());
         for (Discoverer.Result<SearchResponse> r : result) {
 
           SearchResponse sr = r.getResponse();
@@ -150,7 +152,9 @@ public final class Knx {
         }
         Thread.sleep(300);
       }
+      System.out.println("search finished");
       discoverer.clearSearchResponses();
+      System.out.println("clear search response");
     } catch (Exception ex) {
       ex.printStackTrace();
     }
@@ -254,7 +258,7 @@ public final class Knx {
     try {
 
       // setup knx tunneling onnection
-      netlink = KNXNetworkLinkIP.newTunnelingLink(null, new InetSocketAddress(host, 3671), false, new TPSettings());
+      netlink = KNXNetworkLinkIP.newTunnelingLink(new InetSocketAddress(0), new InetSocketAddress(host, 3671), false, new TPSettings());
 
       pc = new SlicKnxProcessCommunicatorImpl(netlink);
       LOG.debug("Connected to knx via {}:{} and individualaddress {}", hostadr, port, individualAddress);
@@ -828,31 +832,31 @@ public final class Knx {
 
   public static void main(String[] args) throws UnknownHostException, KnxException, KNXException, InterruptedException {
 
-    List<KnxInterfaceDevice> detectedDevices = Knx.discoverInterfaceDevices(10000, new AutoDiscoverProgressListener() {
-      
-      @Override
-      public void found(KnxInterfaceDevice device) {
-        System.out.println("found in progress: "+device);
-      }
-
-      @Override
-      public void done(List<KnxInterfaceDevice> foundDevices) {
-        for (KnxInterfaceDevice foundDevice : foundDevices) {
-          System.out.println("Found device: " + foundDevice + " iface: " + foundDevice.getNetworkInterface());
-        }
-        System.exit(0);
-      }
-
-      @Override
-      public void noResult() {
-        System.out.println("No result");
-        System.exit(1);
-      }
-    });
-
-    Thread.sleep(30000);
+//    List<KnxInterfaceDevice> detectedDevices = Knx.discoverInterfaceDevices(10, new AutoDiscoverProgressListener() {
+//      
+//      @Override
+//      public void found(KnxInterfaceDevice device) {
+//        System.out.println("found in progress: "+device);
+//      }
+//
+//      @Override
+//      public void done(List<KnxInterfaceDevice> foundDevices) {
+//        for (KnxInterfaceDevice foundDevice : foundDevices) {
+//          System.out.println("Found device: " + foundDevice + " iface: " + foundDevice.getNetworkInterface());
+//        }
+//        System.exit(0);
+//      }
+//
+//      @Override
+//      public void noResult() {
+//        System.out.println("No result");
+//        System.exit(1);
+//      }
+//    });
+//
+//    Thread.sleep(30000);
     Knx knx = new Knx(InetAddress.getByName("192.168.200.7"));
-
+    knx.writeBoolean(false, "7/7/7", true);
 //        final Knx knx = new Knx("1.1.254");
 //        knx.addGroupAddressListener("1/1/200", new GroupAddressListener() {
 //            
