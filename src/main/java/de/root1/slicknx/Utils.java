@@ -16,7 +16,7 @@ import tuwien.auto.calimero.KNXFormatException;
  * @author achristian
  */
 public class Utils {
-    
+
     final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
 
     public static String bytesToHex(byte[] bytes) {
@@ -28,7 +28,7 @@ public class Utils {
         }
         return new String(hexChars);
     }
-    
+
     public static IndividualAddress getIndividualAddress(String address) throws KnxException {
         try {
             IndividualAddress ia = new IndividualAddress(address);
@@ -37,32 +37,32 @@ public class Utils {
             throw new KnxException("Individual address format not correct.", ex);
         }
     }
-    
+
     public static IndividualAddress getIndividualAddress(byte hi, byte lo) throws KnxException {
         try {
-            IndividualAddress ia = new IndividualAddress(new byte[]{hi,lo});
+            IndividualAddress ia = new IndividualAddress(new byte[]{hi, lo});
             return ia;
         } catch (Exception ex) {
             throw new KnxException("Individual address error.", ex);
         }
     }
-    
+
     public static GroupAddress getGroupAddress(String address) throws KnxException {
         try {
             GroupAddress ga = new GroupAddress(address);
             return ga;
         } catch (KNXFormatException ex) {
             throw new KnxException("Group address format not correct.", ex);
-        } 
+        }
     }
-    
+
     public static GroupAddress getGroupAddress(byte hi, byte lo) throws KnxException {
         try {
-            GroupAddress ga = new GroupAddress(new byte[]{hi,lo});
+            GroupAddress ga = new GroupAddress(new byte[]{hi, lo});
             return ga;
         } catch (Exception ex) {
             throw new KnxException("Group address error.", ex);
         }
     }
-    
+
 }
