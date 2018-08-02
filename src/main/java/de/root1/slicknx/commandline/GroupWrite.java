@@ -7,6 +7,8 @@ package de.root1.slicknx.commandline;
 
 import de.root1.slicknx.Knx;
 import de.root1.slicknx.KnxException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -15,8 +17,14 @@ import de.root1.slicknx.KnxException;
 public class GroupWrite {
     
     public static void main(String[] args) throws KnxException, InterruptedException {
-        
-        args = new String[]{"1.1.128", "5/0/99", "00", "00", "00", "00"};
+//        
+//        List<String> list = new ArrayList<String>();
+//        list.add("1.1.128");
+//        list.add("5/0/99");
+//        for(int i=0;i<=200;i++) {
+//            list.add(String.format("%02x", i));
+//        }
+//        args = list.toArray(new String[0]);
         
         if (args.length<3) {
             printHelp();
