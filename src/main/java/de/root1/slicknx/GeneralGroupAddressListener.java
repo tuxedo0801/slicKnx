@@ -23,13 +23,13 @@ import java.util.List;
 import java.util.Map;
 import tuwien.auto.calimero.DetachEvent;
 import tuwien.auto.calimero.process.ProcessEvent;
-import tuwien.auto.calimero.process.ProcessListenerEx;
+import tuwien.auto.calimero.process.ProcessListener;
 
 /**
  *
  * @author achristian
  */
-public class GeneralGroupAddressListener extends ProcessListenerEx {
+public class GeneralGroupAddressListener implements ProcessListener {
 
     private final Map<String, List<GroupAddressListener>> listeners;
     private GroupAddressListener globalGroupAddressListener;
