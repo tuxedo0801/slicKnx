@@ -29,6 +29,13 @@ public class Utils {
         return new String(hexChars);
     }
 
+    /**
+     * Returns String IA in calimero IndividualAddress object, which uses BigEndian format
+     * 1111111100000000 will end in b[0] = 0xFF and b[1] = 0x00
+     * @param address
+     * @return
+     * @throws KnxException 
+     */
     public static IndividualAddress getIndividualAddress(String address) throws KnxException {
         try {
             IndividualAddress ia = new IndividualAddress(address);
