@@ -1,5 +1,5 @@
 # slicKnx
-Simplified KNX API, based on Calimero 2.2.1-beta
+Simplified KNX API, based on Calimero 2.4-RC1
 
 Sample:
 
@@ -37,29 +37,21 @@ Maven POM configuration:
     <dependency>
         <groupId>de.root1</groupId>
         <artifactId>slicknx</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>2.0.0-SNAPSHOT</version>
     </dependency>
 </dependencies>
 
 <repositories>
     ...
-    <repository>
-        <id>root1-releases</id>
-        <name>root1.de Releases Repository</name>
-        <layout>default</layout>
-        <url>http://nexus.root1.de/content/repositories/releases/</url>
-        <snapshots>
-            <enabled>false</enabled>
-        <snapshots>
-    </repository>
-    <repository>
-        <id>root1-snapshots</id>
-        <name>root1.de Snapshots Repository</name>
-        <layout>default</layout>
-        <url>http://nexus.root1.de/content/repositories/snapshots/</url>
-        <snapshots>
-            <enabled>true</enabled>
-        <snapshots>
-    </repository>
+    <repositories>
+        <repository>
+            <id>root1-releases</id>
+            <url>http://maven.root1.de/repository/releases/</url>
+        </repository>
+        <repository>
+            <id>root1-snapshots</id>
+            <url>http://maven.root1.de/repository/snapshots/</url>
+        </repository>
+    </repositories>
 </repositories>
 ```
