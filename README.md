@@ -1,4 +1,5 @@
 # slicKnx
+
 Simplified KNX API, based on Calimero 2.4-RC1
 
 Sample:
