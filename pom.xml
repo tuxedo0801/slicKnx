@@ -120,8 +120,8 @@
     
     
     <issueManagement>
-        <system>Github</system>
-        <url>https://hithub.com/tuxedo0801/slicKnx/issues</url>
+        <system>GitLab</system>
+        <url>https://gitlab.com/tuxedo0801/slicKnx/issues</url>
     </issueManagement>
 
     <developers>
@@ -146,8 +146,8 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:https://github.com/tuxedo0801/slicKnx.git</connection>
-        <url>https://github.com/tuxedo0801/slicKnx</url>
+        <connection>scm:git:https://gitlab.com/tuxedo0801/slicKnx.git</connection>
+        <url>https://gitlab.com/tuxedo0801/slicKnx</url>
     </scm>    
     
     <repositories>
