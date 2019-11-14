@@ -18,15 +18,11 @@
  */
 package de.root1.slicknx;
 
-import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +46,6 @@ import tuwien.auto.calimero.link.KNXNetworkLinkIP;
 import tuwien.auto.calimero.link.KNXNetworkLinkTpuart;
 import tuwien.auto.calimero.link.medium.TPSettings;
 import tuwien.auto.calimero.process.ProcessCommunicationBase;
-import tuwien.auto.calimero.process.ProcessCommunicatorImpl;
 
 /**
  *
@@ -107,14 +102,14 @@ public final class Knx {
     try {
 
       Discoverer discoverer = new Discoverer(0, false);
-        System.out.println("search starting");
+        LOG.info("search starting");
       discoverer.startSearch(timeout, false);
-        System.out.println("search started");
+        LOG.info("search started");
 
       while (discoverer.isSearching()) {
-        System.out.println("searching...");
+        LOG.info("searching...");
         List<Discoverer.Result<SearchResponse>> result = discoverer.getSearchResponses();
-        System.out.println("result.size:"+result.size());
+        LOG.info("result.size:"+result.size());
         for (Discoverer.Result<SearchResponse> r : result) {
 
           SearchResponse sr = r.getResponse();
@@ -152,9 +147,9 @@ public final class Knx {
         }
         Thread.sleep(300);
       }
-      System.out.println("search finished");
+      LOG.info("search finished");
       discoverer.clearSearchResponses();
-      System.out.println("clear search response");
+      LOG.info("clear search response");
     } catch (Exception ex) {
       ex.printStackTrace();
     }
