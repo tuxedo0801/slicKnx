@@ -877,6 +877,7 @@ public final class Knx {
 //    });
 //
 //    Thread.sleep(30000);
+    
         Knx knx = new Knx(InetAddress.getByName("192.168.200.7"));
 //    knx.writeBoolean(false, "7/7/7", true);
 //        final Knx knx = new Knx("1.1.254");
